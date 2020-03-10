@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/brad-jones/drun/compare/v1.0.4...v1.0.5) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** added git email and name to allow git changes to be pushed ([b4a8d3c](https://github.com/brad-jones/drun/commit/b4a8d3c22617cd412a7220d3ae5613c5928a6534))
+
 ## [1.0.4](https://github.com/brad-jones/drun/compare/v1.0.3...v1.0.4) (2020-03-10)
 
 
