@@ -242,8 +242,11 @@ Future<void> releaseHomebrew(
         .toString(),
   );
   await File('/tmp/homebrew-tap/Formula/drun.rb').writeAsString(template);
+  print(await File('/tmp/homebrew-tap/Formula/drun.rb').readAsString());
 
+  await _execa('git', ['status'], workingDir: '/tmp/homebrew-tap');
   await _execa('git', ['add', '-A'], workingDir: '/tmp/homebrew-tap');
+  await _execa('git', ['status'], workingDir: '/tmp/homebrew-tap');
   await _execa(
     'git',
     ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
@@ -280,8 +283,11 @@ Future<void> releaseScoop(
         .toString(),
   );
   await File('/tmp/scoop-bucket/drun.json').writeAsString(template);
+  print(await File('/tmp/scoop-bucket/drun.json').readAsString());
 
+  await _execa('git', ['status'], workingDir: '/tmp/scoop-bucket');
   await _execa('git', ['add', '-A'], workingDir: '/tmp/scoop-bucket');
+  await _execa('git', ['status'], workingDir: '/tmp/scoop-bucket');
   await _execa(
     'git',
     ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
