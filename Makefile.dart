@@ -229,6 +229,8 @@ Future<void> releaseHomebrew(
     '/tmp/homebrew-tap'
   ]);
 
+  print(await File('/tmp/homebrew-tap/.git/config').readAsString());
+
   var template = await File(p.absolute('brew.rb')).readAsString();
   template.replaceAll('{{VERSION}}', nextVersion);
   template.replaceAll(

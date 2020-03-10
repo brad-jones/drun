@@ -78,9 +78,6 @@ jobs:
       PUB_OAUTH_REFRESH_TOKEN: ${{ secrets.PUB_OAUTH_REFRESH_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          git config --global user.email "@semantic-release";
-          git config --global user.name "semantic-release-bot";
       - uses: actions/download-artifact@v1
         with:
           name: native-executables
@@ -104,4 +101,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-
       - run: pnpm install
-      - run: pnpx semantic-release
+      - run: |
+          git config --global user.email "brad@bjc.id.au";
+          git config --global user.name "Brad Jones";
+          pnpx semantic-release;
