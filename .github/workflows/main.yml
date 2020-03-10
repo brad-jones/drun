@@ -59,7 +59,7 @@ jobs:
       - uses: ./.github/actions/search-replace-file
         with:
           files: ./bin/drun.dart
-          from: 0.0.0-semantically-released
+          from: /0\.0\.0-semantically-released/
           to: https://github.com/brad-jones/drun/commit/${{ github.sha }}
       - run: dart2native ./bin/drun.dart -o ./build/${{ matrix.output-name }} -v
       - uses: actions/upload-artifact@v1
