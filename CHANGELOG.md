@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/brad-jones/drun/compare/v1.0.3...v1.0.4) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** more debugging ([9bec3d9](https://github.com/brad-jones/drun/commit/9bec3d9d3779763af0704bb8eac1aeb6049b53e3))
+
 ## [1.0.3](https://github.com/brad-jones/drun/compare/v1.0.2...v1.0.3) (2020-03-10)
 
 
