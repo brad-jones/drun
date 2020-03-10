@@ -1,0 +1,13 @@
+# nfpm config file: https://github.com/goreleaser/nfpm
+
+name: "drun"
+arch: "amd64"
+platform: "linux"
+version: "v${VERSION}"
+maintainer: "Brad Jones <brad@bjc.id.au>"
+description: A dartlang taskrunner.
+homepage: "https://github.com/brad-jones/drun"
+license: "MIT"
+bindir: "/usr/local/bin"
+files:
+  ./github-assets/drun-linux-x64: "/usr/local/bin/drun"

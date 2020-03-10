@@ -1,0 +1,13 @@
+{
+	"version": "v{{VERSION}}",
+	"architecture": {
+		"64bit": {
+			"url": "https://github.com/brad-jones/drun/releases/download/v{{VERSION}}/drun-windows-x64.zip",
+			"bin": ["drun.exe"],
+			"hash": "{{HASH}}"
+		}
+	},
+	"homepage": "https://github.com/brad-jones/drun",
+	"license": "MIT",
+	"description": "A dartlang task runner."
+}

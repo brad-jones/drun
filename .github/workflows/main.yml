@@ -1,0 +1,104 @@
+on: [push, pull_request]
+
+env:
+  CI: true
+
+jobs:
+  init:
+    if: "! contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/cancel-redundant
+        with:
+          token: ${{ secrets.CANCEL_GITHUB_TOKEN }}
+
+  test:
+    needs: init
+    runs-on: ubuntu-latest
+    container:
+      image: google/dart:2.7.1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v1
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-
+      - run: pub get
+      - run: pub run test
+
+  build:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: ubuntu-latest
+            output-name: drun-linux-x64
+            pub-cache-dir: ~/.pub-cache
+          - os: macOS-latest
+            output-name: drun-darwin-x64
+            pub-cache-dir: ~/.pub-cache
+          - os: windows-latest
+            output-name: drun-windows-x64
+            pub-cache-dir: ~\AppData\Pub\Cache
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/setup-dart
+        with:
+          version: 2.7.1
+      - uses: actions/cache@v1
+        with:
+          path: ${{ matrix.pub-cache-dir }}
+          key: ${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-
+      - run: pub get
+      - run: mkdir build
+      - uses: ./.github/actions/search-replace-file
+        with:
+          files: ./bin/drun.dart
+          from: 0.0.0-semantically-released
+          to: https://github.com/brad-jones/drun/commit/${{ github.sha }}
+      - run: dart2native ./bin/drun.dart -o ./build/${{ matrix.output-name }} -v
+      - uses: actions/upload-artifact@v1
+        with:
+          name: native-executables
+          path: build
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SCOOP_GITHUB_TOKEN: ${{ secrets.SCOOP_GITHUB_TOKEN }}
+      HOMEBREW_GITHUB_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+      PUB_OAUTH_ACCESS_TOKEN: ${{ secrets.PUB_OAUTH_ACCESS_TOKEN }}
+      PUB_OAUTH_REFRESH_TOKEN: ${{ secrets.PUB_OAUTH_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v1
+        with:
+          name: native-executables
+          path: github-assets
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+      - run: npm add -g pnpm
+      - uses: ./.github/actions/setup-dart
+        with:
+          version: 2.7.1
+      - uses: actions/cache@v1
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-
+      - run: pub get
+      - uses: actions/cache@v1
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-
+      - run: pnpm install
+      - run: pnpx semantic-release
