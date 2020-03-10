@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/brad-jones/drun/compare/v1.0.6...v1.0.7) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** ok try again ([62ae53f](https://github.com/brad-jones/drun/commit/62ae53f5c8e6cfa188e15f9a885ed000263a711a))
+
 ## [1.0.6](https://github.com/brad-jones/drun/compare/v1.0.5...v1.0.6) (2020-03-10)
 
 
