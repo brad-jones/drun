@@ -16,7 +16,9 @@ jobs:
     steps:
       - run: env
       - run: |
-          echo "https://${HOMEBREW_GITHUB_TOKEN}@github.com/brad-jones/homebrew-tap.git";
+          git clone --progress "https://${HOMEBREW_GITHUB_TOKEN}@github.com/brad-jones/homebrew-tap.git" /tmp/homebrew-tap;
+          cat /tmp/homebrew-tap/.git/config;
+          cd /tmp/homebrew-tap && echo "foo" > ./foo.txt && git add -A && git commit -m "chore(bogus): will revert later" && git push origin master;
       #- uses: actions/checkout@v2
       #- uses: ./.github/actions/cancel-redundant
       #  with:
