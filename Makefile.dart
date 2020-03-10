@@ -208,7 +208,7 @@ Future<void> releasePublish(
     'refreshToken': '${refreshToken}',
     'tokenEndpoint': 'https://accounts.google.com/o/oauth2/token',
     'scopes': ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
-    'expiration': DateTime.now().add(Duration(hours: 1)).millisecondsSinceEpoch,
+    'expiration': 1583826705770,
   }));
 
   await _execa('pub', ['publish', '--force']);
