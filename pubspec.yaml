@@ -1,7 +1,7 @@
 name: drun
 version: 0.0.0-semantically-released
 homepage: https://github.com/brad-jones/drun
-description: A dartlang task runner.
+description: A dartlang task runner, write functions and call them in your terminal.
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
