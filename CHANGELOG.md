@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/brad-jones/drun/compare/v1.0.1...v1.0.2) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** homebrew and scoop failed to release due to git auth issue ([568d3b1](https://github.com/brad-jones/drun/commit/568d3b136060a59128669417922efaa82ee84639))
+
 ## [1.0.1](https://github.com/brad-jones/drun/compare/v1.0.0...v1.0.1) (2020-03-10)
 
 
