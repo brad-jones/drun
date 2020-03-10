@@ -1,3 +1,10 @@
+## [1.0.10](https://github.com/brad-jones/drun/compare/v1.0.9...v1.0.10) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** github actions is kind of a pain ([284eb1e](https://github.com/brad-jones/drun/commit/284eb1e6dfb4cd27dd79e7eafe9bf9d435e35e14))
+
 ## [1.0.9](https://github.com/brad-jones/drun/compare/v1.0.8...v1.0.9) (2020-03-10)
 
 
