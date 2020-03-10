@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/brad-jones/drun/compare/v1.0.5...v1.0.6) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** perhaps our expiration logic is not correct ([c9fecc8](https://github.com/brad-jones/drun/commit/c9fecc826cdf4617987824f10a6703655b50a6a9))
+
 ## [1.0.5](https://github.com/brad-jones/drun/compare/v1.0.4...v1.0.5) (2020-03-10)
 
 
