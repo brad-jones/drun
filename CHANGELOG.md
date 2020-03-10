@@ -1,3 +1,11 @@
+## [1.0.9](https://github.com/brad-jones/drun/compare/v1.0.8...v1.0.9) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** actually I don't think we need this at all ([bed5970](https://github.com/brad-jones/drun/commit/bed5970109667813c1b3797ae3ebd46a24641ae7))
+* **release:** make commits uses semantic-release-bot ([31c04ff](https://github.com/brad-jones/drun/commit/31c04ff8b1a7c398774dd767cd304eb0acb10c29))
+
 ## [1.0.8](https://github.com/brad-jones/drun/compare/v1.0.7...v1.0.8) (2020-03-10)
 
 
