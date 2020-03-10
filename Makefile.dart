@@ -186,8 +186,10 @@ Future<void> releasePublish(
   String nextVersion,
   bool dryRun, [
   String assetsDir = './github-assets',
-  @Env('PUB_OAUTH_ACCESS_TOKEN') String accessToken = '',
-  @Env('PUB_OAUTH_REFRESH_TOKEN') String refreshToken = '',
+  @Env('PUB_OAUTH_ACCESS_TOKEN') String accessToken,
+  @Env('PUB_OAUTH_REFRESH_TOKEN') String refreshToken,
+  @Env('HOMEBREW_GITHUB_TOKEN') String homebrewGithubToken,
+  @Env('SCOOP_GITHUB_TOKEN') String scoopGithubToken,
 ]) async {
   if (dryRun) {
     await _execa('pub', ['publish', '--dry-run']);
@@ -212,8 +214,8 @@ Future<void> releasePublish(
   }));
 
   await _execa('pub', ['publish', '--force']);
-  await releaseHomebrew(nextVersion, assetsDir);
-  await releaseScoop(nextVersion, assetsDir);
+  await releaseHomebrew(nextVersion, assetsDir, homebrewGithubToken);
+  await releaseScoop(nextVersion, assetsDir, scoopGithubToken);
 }
 
 /// Publishes a new homebrew release
@@ -228,8 +230,6 @@ Future<void> releaseHomebrew(
     'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
     '/tmp/homebrew-tap'
   ]);
-
-  print(await File('/tmp/homebrew-tap/.git/config').readAsString());
 
   var template = await File(p.absolute('brew.rb')).readAsString();
   template.replaceAll('{{VERSION}}', nextVersion);
