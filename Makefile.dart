@@ -243,7 +243,13 @@ Future<void> releaseHomebrew(
   await _execa('git',
       ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
       workingDir: '/tmp/homebrew-tap');
-  await _execa('git', ['push', 'origin', 'master'],
+  await _execa(
+      'git',
+      [
+        'push',
+        'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
+        'master'
+      ],
       workingDir: '/tmp/homebrew-tap');
 }
 
@@ -274,7 +280,13 @@ Future<void> releaseScoop(
   await _execa('git',
       ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
       workingDir: '/tmp/scoop-bucket');
-  await _execa('git', ['push', 'origin', 'master'],
+  await _execa(
+      'git',
+      [
+        'push',
+        'https://${githubToken}@github.com/brad-jones/scoop-bucket.git',
+        'master'
+      ],
       workingDir: '/tmp/scoop-bucket');
 }
 
