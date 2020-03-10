@@ -222,12 +222,16 @@ Future<void> releaseHomebrew(
   String assetsDir = './github-assets',
   @Env('HOMEBREW_GITHUB_TOKEN') String githubToken,
 ]) async {
+  print(githubToken);
+
   await _execa('git', [
     'clone',
     '--progress',
     'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
     '/tmp/homebrew-tap'
   ]);
+
+  print(githubToken);
 
   var template = await File(p.absolute('brew.rb')).readAsString();
   template.replaceAll('{{VERSION}}', nextVersion);
@@ -243,14 +247,18 @@ Future<void> releaseHomebrew(
   await _execa('git',
       ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
       workingDir: '/tmp/homebrew-tap');
+
+  print(githubToken);
+
   await _execa(
-      'git',
-      [
-        'push',
-        'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
-        'master'
-      ],
-      workingDir: '/tmp/homebrew-tap');
+    'git',
+    [
+      'push',
+      'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
+      'master'
+    ],
+    workingDir: '/tmp/homebrew-tap',
+  );
 }
 
 /// Publishes a new scoop release
