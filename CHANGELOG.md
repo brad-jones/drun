@@ -1,3 +1,10 @@
+## [1.0.11](https://github.com/brad-jones/drun/compare/v1.0.10...v1.0.11) (2020-03-10)
+
+
+### Bug Fixes
+
+* **release:** search and replace logic incorrect ([54c0e25](https://github.com/brad-jones/drun/commit/54c0e254f8075c72b4050ad8df4a4b5a235f7e9f))
+
 ## [1.0.10](https://github.com/brad-jones/drun/compare/v1.0.9...v1.0.10) (2020-03-10)
 
 
