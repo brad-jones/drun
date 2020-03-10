@@ -220,10 +220,8 @@ Future<void> releasePublish(
 Future<void> releaseHomebrew(
   String nextVersion, [
   String assetsDir = './github-assets',
-  @Env('HOMEBREW_GITHUB_TOKEN') String githubToken = '',
+  @Env('HOMEBREW_GITHUB_TOKEN') String githubToken,
 ]) async {
-  print('https://${githubToken}@github.com/brad-jones/homebrew-tap.git');
-
   await _execa('git', [
     'clone',
     '--progress',
@@ -234,35 +232,34 @@ Future<void> releaseHomebrew(
   var template = await File(p.absolute('brew.rb')).readAsString();
   template.replaceAll('{{VERSION}}', nextVersion);
   template.replaceAll(
-      '{{HASH}}',
-      sha256
-          .convert(await File(p.join(assetsDir, 'drun-darwin-x64.tar.gz'))
-              .readAsBytes())
-          .toString());
+    '{{HASH}}',
+    sha256
+        .convert(
+          await File(p.join(assetsDir, 'drun-darwin-x64.tar.gz')).readAsBytes(),
+        )
+        .toString(),
+  );
   await File('/tmp/homebrew-tap/Formula/drun.rb').writeAsString(template);
 
   await _execa('git', ['add', '-A'], workingDir: '/tmp/homebrew-tap');
-  await _execa('git',
-      ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
-      workingDir: '/tmp/homebrew-tap');
   await _execa(
-      'git',
-      [
-        'push',
-        'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
-        'master'
-      ],
-      workingDir: '/tmp/homebrew-tap');
+    'git',
+    ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
+    workingDir: '/tmp/homebrew-tap',
+  );
+  await _execa(
+    'git',
+    ['push', 'origin', 'master'],
+    workingDir: '/tmp/homebrew-tap',
+  );
 }
 
 /// Publishes a new scoop release
 Future<void> releaseScoop(
   String nextVersion, [
   String assetsDir = './github-assets',
-  @Env('SCOOP_GITHUB_TOKEN') String githubToken = '',
+  @Env('SCOOP_GITHUB_TOKEN') String githubToken,
 ]) async {
-  print('https://${githubToken}@github.com/brad-jones/scoop-bucket.git');
-
   await _execa('git', [
     'clone',
     '--progress',
@@ -273,25 +270,26 @@ Future<void> releaseScoop(
   var template = await File(p.absolute('scoop.json')).readAsString();
   template.replaceAll('{{VERSION}}', nextVersion);
   template.replaceAll(
-      '{{HASH}}',
-      sha256
-          .convert(await File(p.join(assetsDir, 'drun-windows-x64.zip'))
-              .readAsBytes())
-          .toString());
+    '{{HASH}}',
+    sha256
+        .convert(
+          await File(p.join(assetsDir, 'drun-windows-x64.zip')).readAsBytes(),
+        )
+        .toString(),
+  );
   await File('/tmp/scoop-bucket/drun.json').writeAsString(template);
 
   await _execa('git', ['add', '-A'], workingDir: '/tmp/scoop-bucket');
-  await _execa('git',
-      ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
-      workingDir: '/tmp/scoop-bucket');
   await _execa(
-      'git',
-      [
-        'push',
-        'https://${githubToken}@github.com/brad-jones/scoop-bucket.git',
-        'master'
-      ],
-      workingDir: '/tmp/scoop-bucket');
+    'git',
+    ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
+    workingDir: '/tmp/scoop-bucket',
+  );
+  await _execa(
+    'git',
+    ['push', 'origin', 'master'],
+    workingDir: '/tmp/scoop-bucket',
+  );
 }
 
 /// A simple function to execute a child process in a streaming manner.
