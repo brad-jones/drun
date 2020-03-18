@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/brad-jones/drun/compare/v1.1.1...v1.1.2) (2020-03-18)
+
+
+### Bug Fixes
+
+* **binary:** make use of our new packages dexeca and dexecve ([efea46d](https://github.com/brad-jones/drun/commit/efea46d99d3acfeec65ed5145f059e1e3f4b98f8))
+
 ## [1.1.1](https://github.com/brad-jones/drun/compare/v1.1.0...v1.1.1) (2020-03-18)
 
 
