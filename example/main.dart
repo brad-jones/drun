@@ -1,5 +1,12 @@
 import 'package:drun/drun.dart';
 
+/*
+  Technically this file would be named `Makefile.dart` if it were to actually
+  work with `drun`. But the dartlang package conventions say this file should
+  be named `main.dart` in order to be recognised as an actual example and show
+  up at <https://pub.dev/packages/drun>
+*/
+
 /// Start off by redirecting your main method to the drun method
 Future<void> main(argv) async => drun(argv);
 
