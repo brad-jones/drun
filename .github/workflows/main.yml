@@ -8,8 +8,7 @@ jobs:
     if: "! contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/cancel-redundant
+      - uses: brad-jones/actions/cancel-redundant@v1.0.0
         with:
           token: ${{ secrets.CANCEL_GITHUB_TOKEN }}
 
@@ -46,7 +45,7 @@ jobs:
             pub-cache-dir: ~\AppData\Pub\Cache
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/setup-dart
+      - uses: brad-jones/actions/setup-dart@v1.0.0
         with:
           version: 2.7.1
       - uses: actions/cache@v1
@@ -56,7 +55,7 @@ jobs:
           restore-keys: ${{ runner.os }}-
       - run: pub get
       - run: mkdir build
-      - uses: ./.github/actions/search-replace-file
+      - uses: brad-jones/actions/search-replace-file@v1.0.0
         with:
           files: ./bin/drun.dart
           from: /0\.0\.0-semantically-released/
@@ -86,7 +85,7 @@ jobs:
         with:
           node-version: "12.x"
       - run: npm add -g pnpm
-      - uses: ./.github/actions/setup-dart
+      - uses: brad-jones/actions/setup-dart@v1.0.0
         with:
           version: 2.7.1
       - uses: actions/cache@v1
