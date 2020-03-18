@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/brad-jones/drun/compare/v1.1.0...v1.1.1) (2020-03-18)
+
+
+### Bug Fixes
+
+* **example:** renamed the file to main.dart ([7b6ddda](https://github.com/brad-jones/drun/commit/7b6ddda373a75e61a811dc5bede6dba11a195295))
+
 # [1.1.0](https://github.com/brad-jones/drun/compare/v1.0.11...v1.1.0) (2020-03-18)
 
 
