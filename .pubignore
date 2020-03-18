@@ -1,0 +1,7 @@
+# dartlang pub publish ignore rules
+.*
+analysis_options.yaml
+Makefile.dart
+package.json
+pnpm*.yaml
+pubspec.lock

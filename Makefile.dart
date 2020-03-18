@@ -1,11 +1,12 @@
+import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'package:crypto/crypto.dart';
 import 'package:drun/drun.dart';
+import 'package:crypto/crypto.dart';
+import 'package:dexeca/dexeca.dart';
 import 'package:path/path.dart' as p;
-import 'package:pretty_json/pretty_json.dart';
 import 'package:archive/archive_io.dart';
+import 'package:pretty_json/pretty_json.dart';
 
 /// TIP: Bootstrap this with `pub run drun`
 Future<void> main(argv) async => drun(argv);
@@ -179,43 +180,75 @@ Future<void> generateChecksums([String assetsDir = './github-assets']) async {
 ///
 /// * [dryRun] If supplied then nothing will actually get published.
 ///
+/// * [assetsDir] This is required by the scoop and homebrew publish tasks.
+///
 /// * [accessToken] Get this from your local `credentials.json` file.
 ///
 /// * [refreshToken] Get this from your local `credentials.json` file.
+///
+/// * [oAuthExpiration] Get this from your local `credentials.json` file.
+///
+/// * [homebrewGithubToken] A github token that has write permissions to the homebrew git repo.
+///
+/// * [scoopGithubToken] A github token that has write permissions to the scoop git repo.
 Future<void> releasePublish(
   String nextVersion,
   bool dryRun, [
   String assetsDir = './github-assets',
-  @Env('PUB_OAUTH_ACCESS_TOKEN') String accessToken,
-  @Env('PUB_OAUTH_REFRESH_TOKEN') String refreshToken,
+  @Env('PUB_OAUTH_ACCESS_TOKEN') String accessToken = '',
+  @Env('PUB_OAUTH_REFRESH_TOKEN') String refreshToken = '',
+  @Env('PUB_OAUTH_EXPIRATION') int oAuthExpiration = 0,
   @Env('HOMEBREW_GITHUB_TOKEN') String homebrewGithubToken,
   @Env('SCOOP_GITHUB_TOKEN') String scoopGithubToken,
 ]) async {
-  if (dryRun) {
-    await _execa('pub', ['publish', '--dry-run']);
-    return;
+  String tmpDir;
+  var gitIgnore = File(p.absolute('.gitignore'));
+
+  try {
+    // Copy our custom .pubignore rules into .gitignore
+    // see: https://github.com/dart-lang/pub/issues/2222
+    tmpDir = (await Directory.systemTemp.createTemp('dexecve')).path;
+    var pubIgnoreRulesFuture = File(p.absolute('.pubignore')).readAsString();
+    await gitIgnore.copy(p.join(tmpDir, '.gitignore'));
+    await gitIgnore.writeAsString(
+      '\n${(await pubIgnoreRulesFuture)}',
+      mode: FileMode.append,
+    );
+
+    if (dryRun) {
+      await dexeca('pub', ['publish', '--dry-run'],
+          runInShell: Platform.isWindows);
+      return;
+    }
+
+    if (accessToken.isEmpty || refreshToken.isEmpty) {
+      throw 'accessToken & refreshToken must be supplied!';
+    }
+
+    // on windows the path is actually %%UserProfile%%\AppData\Roaming\Pub\Cache
+    // not that this really matters because we only intend on running this inside
+    // a pipeline which will be running linux.
+    var credsFilePath = p.join(_homeDir(), '.pub-cache', 'credentials.json');
+
+    await File(credsFilePath).writeAsString(jsonEncode({
+      'accessToken': '${accessToken}',
+      'refreshToken': '${refreshToken}',
+      'tokenEndpoint': 'https://accounts.google.com/o/oauth2/token',
+      'scopes': ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+      'expiration': oAuthExpiration,
+    }));
+
+    await dexeca('pub', ['publish', '--force'], runInShell: Platform.isWindows);
+    await releaseHomebrew(nextVersion, assetsDir, homebrewGithubToken);
+    await releaseScoop(nextVersion, assetsDir, scoopGithubToken);
+  } finally {
+    if (tmpDir != null) {
+      if (await File(p.join(tmpDir, '.gitignore')).exists()) {
+        await File(p.join(tmpDir, '.gitignore')).copy(gitIgnore.path);
+      }
+      await Directory(tmpDir).delete(recursive: true);
+    }
   }
-
-  if (accessToken.isEmpty || refreshToken.isEmpty) {
-    throw 'accessToken & refreshToken must be supplied!';
-  }
-
-  // on windows the path is actually %%UserProfile%%\AppData\Roaming\Pub\Cache
-  // not that this really matters because we only intend on running this inside
-  // a pipeline which will be running linux.
-  var credsFilePath = p.join(_homeDir(), '.pub-cache', 'credentials.json');
-
-  await File(credsFilePath).writeAsString(jsonEncode({
-    'accessToken': '${accessToken}',
-    'refreshToken': '${refreshToken}',
-    'tokenEndpoint': 'https://accounts.google.com/o/oauth2/token',
-    'scopes': ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
-    'expiration': 1583826705770,
-  }));
-
-  await _execa('pub', ['publish', '--force']);
-  await releaseHomebrew(nextVersion, assetsDir, homebrewGithubToken);
-  await releaseScoop(nextVersion, assetsDir, scoopGithubToken);
 }
 
 /// Publishes a new homebrew release
@@ -224,7 +257,7 @@ Future<void> releaseHomebrew(
   String assetsDir = './github-assets',
   @Env('HOMEBREW_GITHUB_TOKEN') String githubToken,
 ]) async {
-  await _execa('git', [
+  await dexeca('git', [
     'clone',
     '--progress',
     'https://${githubToken}@github.com/brad-jones/homebrew-tap.git',
@@ -243,16 +276,16 @@ Future<void> releaseHomebrew(
   );
   await File('/tmp/homebrew-tap/Formula/drun.rb').writeAsString(template);
 
-  await _execa('git', ['add', '-A'], workingDir: '/tmp/homebrew-tap');
-  await _execa(
+  await dexeca('git', ['add', '-A'], workingDirectory: '/tmp/homebrew-tap');
+  await dexeca(
     'git',
     ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
-    workingDir: '/tmp/homebrew-tap',
+    workingDirectory: '/tmp/homebrew-tap',
   );
-  await _execa(
+  await dexeca(
     'git',
     ['push', 'origin', 'master'],
-    workingDir: '/tmp/homebrew-tap',
+    workingDirectory: '/tmp/homebrew-tap',
   );
 }
 
@@ -262,7 +295,7 @@ Future<void> releaseScoop(
   String assetsDir = './github-assets',
   @Env('SCOOP_GITHUB_TOKEN') String githubToken,
 ]) async {
-  await _execa('git', [
+  await dexeca('git', [
     'clone',
     '--progress',
     'https://${githubToken}@github.com/brad-jones/scoop-bucket.git',
@@ -281,40 +314,21 @@ Future<void> releaseScoop(
   );
   await File('/tmp/scoop-bucket/drun.json').writeAsString(template);
 
-  await _execa('git', ['add', '-A'], workingDir: '/tmp/scoop-bucket');
-  await _execa(
+  await dexeca('git', ['add', '-A'], workingDirectory: '/tmp/scoop-bucket');
+  await dexeca(
     'git',
     ['commit', '-m', 'chore(drun): release new version ${nextVersion}'],
-    workingDir: '/tmp/scoop-bucket',
+    workingDirectory: '/tmp/scoop-bucket',
   );
-  await _execa(
+  await dexeca(
     'git',
     ['push', 'origin', 'master'],
-    workingDir: '/tmp/scoop-bucket',
+    workingDirectory: '/tmp/scoop-bucket',
   );
 }
 
-/// A simple function to execute a child process in a streaming manner.
-/// No other package I could find even comes close to this simple function
-/// which is all I wanted.
-///
-/// !!! Dartlang needs a port of https://github.com/sindresorhus/execa !!!
-///
-/// I did consider adding a second library to this package but I feel like it's
-/// more generic and belongs in it's own package.
-///
-/// OH AND THIS IS NOT THREAD SAFE, need to work out how to interleave streams
-Future<void> _execa(String exe, List<String> args, {String workingDir}) async {
-  final proc = await Process.start(exe, args, workingDirectory: workingDir);
-  await stdout.addStream(proc.stdout);
-  await stderr.addStream(proc.stderr);
-  if (await proc.exitCode != 0) {
-    throw 'failed to execute ${exe} ${args}';
-  }
-}
-
-Future<void> _execNfpm(String version, String target) {
-  return _execa('docker', [
+Future<void> _execNfpm(String version, String target) async {
+  await dexeca('docker', [
     'run',
     '--rm',
     '-v',
