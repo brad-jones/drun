@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/brad-jones/drun/compare/v1.0.11...v1.1.0) (2020-03-18)
+
+
+### Features
+
+* **example:** added one ([c5d8514](https://github.com/brad-jones/drun/commit/c5d851447fe2618045a981b757f78519a0c29267))
+
 ## [1.0.11](https://github.com/brad-jones/drun/compare/v1.0.10...v1.0.11) (2020-03-10)
 
 
