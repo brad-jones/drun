@@ -85,7 +85,7 @@ Future<void> writeHelp(
       Console.setTextColor(Color.GRAY.id);
 
       var buffer1 = StringBuffer();
-      buffer1.write('  --${parameter.key}');
+      buffer1.write('  --${parameter.key.paramCase}');
       if (Abbr.hasMetadata(p)) {
         buffer1.write(',-${Abbr.fromMetadata(p).value}');
       }
