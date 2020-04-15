@@ -1,3 +1,11 @@
+## [1.1.3](https://github.com/brad-jones/drun/compare/v1.1.2...v1.1.3) (2020-04-15)
+
+
+### Bug Fixes
+
+* **help:** format option names with param-case ([0cbcfbf](https://github.com/brad-jones/drun/commit/0cbcfbf87ef03af8b06c2271138dc8cab8bbd48c))
+* **stdin:** the new version of dexecve should handle stdin ([2b8e084](https://github.com/brad-jones/drun/commit/2b8e084b1ec938e7bdb8a08f6fe7ce4bb6e45051))
+
 ## [1.1.2](https://github.com/brad-jones/drun/compare/v1.1.1...v1.1.2) (2020-03-18)
 
 
