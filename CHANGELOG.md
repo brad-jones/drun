@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/brad-jones/drun/compare/v1.1.4...v1.1.5) (2020-04-15)
+
+
+### Bug Fixes
+
+* **windows:** updated dexecve which uses ProcessStartMode.inheritStdio ([4a33877](https://github.com/brad-jones/drun/commit/4a3387735be0a77e472fd439888fbc3289df1899))
+
 ## [1.1.4](https://github.com/brad-jones/drun/compare/v1.1.3...v1.1.4) (2020-04-15)
 
 
