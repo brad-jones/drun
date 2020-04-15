@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/brad-jones/drun/compare/v1.1.3...v1.1.4) (2020-04-15)
+
+
+### Bug Fixes
+
+* **stdin:** another fix for dexecve ([642a510](https://github.com/brad-jones/drun/commit/642a5103e4d2bbab5f019055d05de1816bdda94c))
+
 ## [1.1.3](https://github.com/brad-jones/drun/compare/v1.1.2...v1.1.3) (2020-04-15)
 
 
