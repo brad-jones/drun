@@ -1,14 +1,14 @@
 import 'package:drun/drun.dart';
 
-/*
-  Technically this file would be named `Makefile.dart` if it were to actually
-  work with `drun`. But the dartlang package conventions say this file should
-  be named `main.dart` in order to be recognised as an actual example and show
-  up at <https://pub.dev/packages/drun>
-*/
+// Global options can be defined in another file or inline anywhere in your makefile
+import './Makefile.opts.dart';
+
+// Other makefiles can be imported and their tasks will be prefixed with the import prefix.
+import './projects/foo/Makefile.dart' as foo;
+import './projects/bar/Makefile.dart' as bar;
 
 /// Start off by redirecting your main method to the drun method
-Future<void> main(argv) async => drun(argv);
+Future<void> main(List<String> argv) => drun(argv);
 
 /// Then just create functions that can be called via the command line
 /// call me like: `drun my-task`
@@ -27,10 +27,10 @@ Future<void> myAsyncTask() async {
 }
 
 /// Private functions do not get exposed as CLI tasks.
-/// The same is true for anything that is imported or exported,
-/// regardless of their visibility.
+/// The same is true for anything that is imported.
 ///
-/// Only public functions in your "Makefile.dart" will be considered as tasks
+/// Only public functions in files named "Makefile.dart"
+/// will be considered as tasks.
 void _myPrivateTask() {}
 
 /// Tasks can have parameters.
@@ -97,4 +97,19 @@ void myTaskWithEnvParameter(@Env('FOO_BAR') String foobar) {
 /// * `drun my-task-with-value-validation --foobar xyz`
 void myTaskWithValueValidation(@Values(['foo', 'bar']) String foobar) {
   print('foobar=${foobar}');
+}
+
+/// Tasks can call other tasks just like any other function call.
+void myTaskThatCallsAnother() {
+  foo.build();
+}
+
+/// An example of consuming global options.
+void myTaskWithGlobalOptions() {
+  print(Options.foo);
+  print(Options.bar);
+  print(Options.baz);
+  print(Options.abc);
+  print(Options.xyz);
+  print(Options.foobar);
 }

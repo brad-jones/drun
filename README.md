@@ -77,4 +77,4 @@ void myTask() {
 
 Execute with `drun my-task`
 
-> see [./example/main.dart](./example/main.dart) for more details
+> see [./example/README.md](./example/README.md) for more details

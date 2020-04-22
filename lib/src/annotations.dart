@@ -15,11 +15,11 @@ class Abbr {
   final String value;
   const Abbr(this.value);
 
-  static bool hasMetadata(ParameterMirror p) {
+  static bool hasMetadata(DeclarationMirror p) {
     return fromMetadata(p) != null;
   }
 
-  static Abbr fromMetadata(ParameterMirror p) {
+  static Abbr fromMetadata(DeclarationMirror p) {
     Abbr v;
     var m = p.metadata
         .singleWhere((_) => _.type.reflectedType == Abbr, orElse: () => null);
@@ -47,11 +47,11 @@ class Env {
   final String value;
   const Env(this.value);
 
-  static bool hasMetadata(ParameterMirror p) {
+  static bool hasMetadata(DeclarationMirror p) {
     return fromMetadata(p) != null;
   }
 
-  static Env fromMetadata(ParameterMirror p) {
+  static Env fromMetadata(DeclarationMirror p) {
     Env v;
     var m = p.metadata
         .singleWhere((_) => _.type.reflectedType == Env, orElse: () => null);
@@ -85,16 +85,53 @@ class Values {
   final List<String> values;
   const Values(this.values);
 
-  static bool hasMetadata(ParameterMirror p) {
+  static bool hasMetadata(DeclarationMirror p) {
     return fromMetadata(p) != null;
   }
 
-  static Values fromMetadata(ParameterMirror p) {
+  static Values fromMetadata(DeclarationMirror p) {
     Values v;
     var m = p.metadata
         .singleWhere((_) => _.type.reflectedType == Values, orElse: () => null);
     if (m != null) {
       v = m.reflectee as Values;
+    }
+    return v;
+  }
+}
+
+/// Used on global option getters to ensure a value is provided via CLI or
+/// environment if annotated.
+///
+/// For example:
+///
+/// ```dart
+/// class Options extends GlobalOptions {
+///   @Required()
+///   static String get foo {
+///     return GlobalOptions.value;
+///   }
+/// }
+/// ```
+///
+/// [GlobalOptions.value] will now throw an exception if it would have
+/// returned null. We need this annotation because of the way global options
+/// are implemented as methods and not method parameters that can be implicitly
+/// marked as required by not providing a default value.
+class Required {
+  final bool value;
+  const Required([this.value = true]);
+
+  static bool hasMetadata(DeclarationMirror p) {
+    return fromMetadata(p) != null;
+  }
+
+  static Required fromMetadata(DeclarationMirror p) {
+    Required v;
+    var m = p.metadata.singleWhere((_) => _.type.reflectedType == Required,
+        orElse: () => null);
+    if (m != null) {
+      v = m.reflectee as Required;
     }
     return v;
   }

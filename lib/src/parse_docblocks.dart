@@ -16,19 +16,24 @@ class DocBlock {
   });
 }
 
+Map<Uri, List<String>> _srcFiles = {};
+
 Future<List<DocBlock>> parseDocBlocks(
-  String filePath,
-  Iterable<MethodMirror> tasks,
+  Map<String, MethodMirror> methods,
 ) async {
   var docBlocks = <DocBlock>[];
-  if (tasks.isEmpty) return docBlocks;
+  if (methods?.isEmpty ?? true) return docBlocks;
 
-  var lines = await File(filePath).readAsLines();
-  if (lines.isEmpty) return docBlocks;
+  for (var e in methods.entries) {
+    if (!_srcFiles.containsKey(e.value.location.sourceUri)) {
+      _srcFiles[e.value.location.sourceUri] =
+          (await File.fromUri(e.value.location.sourceUri).readAsLines())
+              .map((line) => line.trimLeft())
+              .toList();
+    }
+    var lines = _srcFiles[e.value.location.sourceUri];
 
-  for (var task in tasks) {
-    var funcName = MirrorSystem.getName(task.simpleName);
-    var funcSignature = LineSplitter().convert(task.source).first;
+    var funcSignature = LineSplitter().convert(e.value.source).first;
 
     var docBlock = lines.reversed
         .skipWhile((_) => _ != funcSignature)
@@ -39,7 +44,7 @@ Future<List<DocBlock>> parseDocBlocks(
         .map((_) => _.replaceFirst('///', '').trimLeft());
 
     var parameters = <String, String>{};
-    for (var parameter in task.parameters) {
+    for (var parameter in e.value.parameters) {
       var paramName = MirrorSystem.getName(parameter.simpleName);
       parameters[paramName] = docBlock
           .skipWhile((_) => !_.startsWith('* [$paramName]'))
@@ -51,7 +56,7 @@ Future<List<DocBlock>> parseDocBlocks(
 
     if (docBlock.isEmpty) {
       docBlocks.add(DocBlock(
-        funcName: funcName,
+        funcName: e.key,
         summary: '',
         description: '',
         parameters: parameters,
@@ -60,7 +65,7 @@ Future<List<DocBlock>> parseDocBlocks(
     }
 
     docBlocks.add(DocBlock(
-      funcName: funcName,
+      funcName: e.key,
       summary: docBlock.first.trim(),
       description: docBlock
           .skip(1)

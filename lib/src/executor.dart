@@ -5,12 +5,14 @@ import 'package:recase/recase.dart';
 import 'package:drun/src/write_help.dart';
 import 'package:drun/src/annotations.dart';
 import 'package:drun/src/type_parser.dart';
+import 'package:dotenv/dotenv.dart' as dotenv;
 
 const _version = '0.0.0-semantically-released';
 
 Future<void> executor(
-  LibraryMirror lib,
-  Iterable<MethodMirror> tasks,
+  Map<Uri, LibraryMirror> libs,
+  Map<String, MethodMirror> tasks,
+  Map<String, MethodMirror> options,
   ArgResults parsedArgv,
 ) async {
   if (parsedArgv.wasParsed('version')) {
@@ -19,15 +21,14 @@ Future<void> executor(
   }
 
   if (parsedArgv.command == null) {
-    await writeHelp(parsedArgv, tasks);
+    await writeHelp(tasks, options, parsedArgv);
     return;
   }
 
-  var task = tasks.singleWhere(
-      (_) => _.simpleName == Symbol(parsedArgv.command.name.camelCase));
+  var task = tasks[parsedArgv.command.name];
 
   if (parsedArgv.wasParsed('help')) {
-    await writeHelp(parsedArgv, [task]);
+    await writeHelp({parsedArgv.command.name: task}, options, parsedArgv);
     return;
   }
 
@@ -41,10 +42,10 @@ Future<void> executor(
 
     if (Env.hasMetadata(p)) {
       var envKey = Env.fromMetadata(p).value;
-      if (Platform.environment.containsKey(envKey)) {
+      if (dotenv.env.containsKey(envKey)) {
         return typeParser(
           p.type.reflectedType,
-          Platform.environment[envKey],
+          dotenv.env[envKey],
         );
       }
     }
@@ -56,7 +57,9 @@ Future<void> executor(
     throw 'The option --${pName} is required!';
   }).toList();
 
-  var result = lib.invoke(task.simpleName, taskParameterValues).reflectee;
+  var result = libs[task.location.sourceUri]
+      .invoke(task.simpleName, taskParameterValues)
+      .reflectee;
 
   if (result is Future) {
     await result;

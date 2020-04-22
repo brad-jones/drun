@@ -3,16 +3,38 @@ import 'package:args/args.dart';
 import 'package:recase/recase.dart';
 import 'package:drun/src/annotations.dart';
 
-ArgParser buildArgParser(Iterable<MethodMirror> tasks) {
+ArgParser buildArgParser(
+  Map<String, MethodMirror> tasks,
+  Map<String, MethodMirror> options,
+) {
   var parser = ArgParser();
   parser.addFlag('help', abbr: 'h');
   parser.addFlag('version', abbr: 'v');
 
-  for (var task in tasks) {
-    var command =
-        parser.addCommand(MirrorSystem.getName(task.simpleName).paramCase);
+  for (var e in options.entries) {
+    var abbrValue =
+        Abbr.hasMetadata(e.value) ? Abbr.fromMetadata(e.value).value : null;
 
-    for (var parameter in task.parameters) {
+    if (e.value.returnType.reflectedType == bool) {
+      parser.addFlag(e.key, abbr: abbrValue, negatable: false);
+      continue;
+    }
+
+    if (e.value.returnType.reflectedType.toString().startsWith('List<')) {
+      parser.addMultiOption(e.key, abbr: abbrValue);
+    } else {
+      var allowed;
+      if (Values.hasMetadata(e.value)) {
+        allowed = Values.fromMetadata(e.value).values;
+      }
+      parser.addOption(e.key, abbr: abbrValue, allowed: allowed);
+    }
+  }
+
+  for (var e in tasks.entries) {
+    var command = parser.addCommand(e.key);
+
+    for (var parameter in e.value.parameters) {
       var optName = MirrorSystem.getName(parameter.simpleName).paramCase;
 
       var abbrValue = Abbr.hasMetadata(parameter)

@@ -14,8 +14,10 @@ dependencies:
   console: ^3.1.0
   dexeca: ^1.0.1
   dexecve: ^1.1.0
+  dotenv: ^2.0.0
   io: ^0.3.3
   recase: ^3.0.0
+  stack_trace: ^1.9.3
 
 dev_dependencies:
   archive: ^2.0.13

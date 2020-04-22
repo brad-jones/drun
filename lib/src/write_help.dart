@@ -4,7 +4,7 @@ import 'dart:mirrors';
 import 'package:args/args.dart';
 import 'package:recase/recase.dart';
 import 'package:console/console.dart';
-import 'package:drun/drun.dart';
+import 'package:drun/src/annotations.dart';
 import 'package:drun/src/parse_docblocks.dart';
 
 const String asciiArt = '''
@@ -19,13 +19,15 @@ const String asciiArt = '''
 ''';
 
 Future<void> writeHelp(
+  Map<String, MethodMirror> tasks,
+  Map<String, MethodMirror> options,
   ArgResults parsedArgv,
-  Iterable<MethodMirror> tasks,
 ) async {
   Console.init();
 
   // Start parsing the makefile for docblocks
-  var docBlocksFuture = parseDocBlocks(Platform.script.toFilePath(), tasks);
+  var docBlocksFuture = parseDocBlocks(tasks);
+  var globalOptionsFuture = parseDocBlocks(options);
 
   // Now do what we can to get some pixels on the screen as soon as possible
   if (parsedArgv.command == null) {
@@ -51,7 +53,7 @@ Future<void> writeHelp(
     stdout.writeln('Tasks:');
     for (var docBlock in docBlocks) {
       Console.setBold(true);
-      stdout.write('  ${docBlock.funcName.paramCase}');
+      stdout.write('  ${docBlock.funcName}');
       Console.resetAll();
       stdout.write(': ${docBlock.summary}');
       stdout.writeln();
@@ -72,10 +74,9 @@ Future<void> writeHelp(
   // Output the options for the task
   stdout.writeln('Options:');
   if (parsedArgv.command != null) {
-    var task = tasks.singleWhere(
-        (_) => _.simpleName == Symbol(parsedArgv.command.name.camelCase));
-    var docBlock = docBlocks
-        .singleWhere((_) => _.funcName == parsedArgv.command.name.camelCase);
+    var task = tasks[parsedArgv.command.name];
+    var docBlock =
+        docBlocks.singleWhere((_) => _.funcName == parsedArgv.command.name);
     for (var parameter in docBlock.parameters.entries) {
       var p = task.parameters
           .singleWhere((_) => _.simpleName == Symbol(parameter.key));
@@ -128,7 +129,65 @@ Future<void> writeHelp(
     }
   }
 
-  // Output out global options
+  // Output global options
+  var globalOptions = await globalOptionsFuture;
+  if (globalOptions.isNotEmpty) {
+    for (var option in options.entries) {
+      Console.setBold(true);
+      Console.setUnderline(true);
+      Console.setTextColor(Color.GRAY.id);
+
+      var buffer1 = StringBuffer();
+      buffer1.write('  --${option.key}');
+      if (Abbr.hasMetadata(option.value)) {
+        buffer1.write(',-${Abbr.fromMetadata(option.value).value}');
+      }
+      var optFlags = buffer1.toString();
+      stdout.write(optFlags);
+
+      var buffer2 = StringBuffer();
+      buffer2.write(
+          '[${option.value.returnType.reflectedType.toString().toLowerCase()}]');
+      if (option.value.returnType.reflectedType
+          .toString()
+          .startsWith('List<')) {
+        buffer2.write('csv');
+      }
+      if (Required.hasMetadata(option.value) &&
+          Required.fromMetadata(option.value).value &&
+          option.value.returnType.reflectedType != bool) {
+        buffer2.write(' "required"');
+      }
+      if (Env.hasMetadata(option.value)) {
+        buffer2.write(' <env:${Env.fromMetadata(option.value).value}>');
+      }
+      if (Values.hasMetadata(option.value)) {
+        buffer2.write(' valid: ${Values.fromMetadata(option.value).values}');
+      }
+      //if (option.value.hasDefaultValue) {
+      //  buffer2.write(' (default: "${option.value.defaultValue.reflectee.toString()}")');
+      //}
+      var optMeta = buffer2.toString();
+      stdout.write(optMeta.padLeft(80 - optFlags.length));
+      stdout.writeln();
+      Console.resetAll();
+
+      var docBlock = globalOptions.singleWhere((_) => _.funcName == option.key);
+      if (docBlock.summary.isNotEmpty) {
+        stdout.writeln(
+          LineSplitter()
+              .convert('${docBlock.summary}\n${docBlock.description}')
+              .map((_) => '  ${_}')
+              .join('\n'),
+        );
+      } else {
+        stdout.writeln('  **undocumented**');
+      }
+      stdout.writeln();
+    }
+  }
+
+  // Output our built-in options
   Console.setBold(true);
   Console.setUnderline(true);
   Console.setTextColor(Color.GRAY.id);
