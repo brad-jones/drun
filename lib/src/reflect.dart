@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:mirrors';
 import 'package:recase/recase.dart';
 import 'package:drun/src/global_options.dart';
