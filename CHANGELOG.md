@@ -1,3 +1,17 @@
+# [2.0.0](https://github.com/brad-jones/drun/compare/v1.1.5...v2.0.0) (2020-04-22)
+
+
+### Features
+
+* **global-options:** allow options to be shared between tasks ([3037980](https://github.com/brad-jones/drun/commit/303798012fb15df53cf151110cc17b4398e6a63d))
+
+
+### BREAKING CHANGES
+
+* **global-options:** fairly significant changes although none are
+breaking I believe, but without a test suite it's hard to say. If this is v2,
+then v3 will include a full test suite, I promise :)
+
 ## [1.1.5](https://github.com/brad-jones/drun/compare/v1.1.4...v1.1.5) (2020-04-15)
 
 
