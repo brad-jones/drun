@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/brad-jones/drun/compare/v2.0.1...v2.0.2) (2020-04-22)
+
+
+### Bug Fixes
+
+* **windows:** strip leaing slash from root makefile path ([dba938b](https://github.com/brad-jones/drun/commit/dba938be9adcee37544a2423cae19ed207083d68))
+
 ## [2.0.1](https://github.com/brad-jones/drun/compare/v2.0.0...v2.0.1) (2020-04-22)
 
 
