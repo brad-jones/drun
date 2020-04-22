@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'dart:mirrors';
-import 'package:drun/src/build.dart';
-import 'package:drun/src/reflect.dart';
 import 'package:io/ansi.dart';
+import 'package:drun/src/build.dart';
+import 'package:path/path.dart' as p;
+import 'package:drun/src/reflect.dart';
 import 'package:drun/src/executor.dart';
 export 'package:drun/src/annotations.dart';
 import 'package:drun/src/write_error.dart';
@@ -34,8 +35,8 @@ Future<void> drun(List<String> argv, {String dotEnvFilePath = '.env'}) async {
     var libs = reflectLibs(ms);
     var rootMakeFile = libs.entries
         .singleWhere((_) =>
-            _.key.path ==
-            '${Directory.current.path}${Platform.pathSeparator}Makefile.dart')
+            p.normalize(_.key.path) ==
+            p.normalize('${Directory.current.path}/Makefile.dart'))
         .value;
     var deps = reflectDeps(rootMakeFile, '');
     var tasks = reflectTasks(libs, deps);
