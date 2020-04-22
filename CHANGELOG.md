@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/brad-jones/drun/compare/v2.0.0...v2.0.1) (2020-04-22)
+
+
+### Bug Fixes
+
+* **windows:** normalize paths when looking for root makefile ([5271990](https://github.com/brad-jones/drun/commit/5271990ba5457e037d32c94c7b8c97cb9c3e89ea))
+
 # [2.0.0](https://github.com/brad-jones/drun/compare/v1.1.5...v2.0.0) (2020-04-22)
 
 
