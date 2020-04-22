@@ -35,7 +35,7 @@ Future<void> drun(List<String> argv, {String dotEnvFilePath = '.env'}) async {
     var libs = reflectLibs(ms);
     var rootMakeFile = libs.entries
         .singleWhere((_) =>
-            p.normalize(_.key.path) ==
+            p.normalize(_.key.path).replaceFirst('\\', '') ==
             p.normalize('${Directory.current.path}/Makefile.dart'))
         .value;
     var deps = reflectDeps(rootMakeFile, '');
