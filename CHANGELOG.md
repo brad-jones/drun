@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/brad-jones/drun/compare/v2.0.2...v2.0.3) (2020-05-07)
+
+
+### Bug Fixes
+
+* **archives:** make sure the execute bit is set ([2bc9912](https://github.com/brad-jones/drun/commit/2bc99129c8dca105cae53143002c3802e9ddda07))
+
 ## [2.0.2](https://github.com/brad-jones/drun/compare/v2.0.1...v2.0.2) (2020-04-22)
 
 
