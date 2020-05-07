@@ -11,24 +11,6 @@ import 'package:pretty_json/pretty_json.dart';
 /// TIP: Bootstrap this with `pub run drun`
 Future<void> main(argv) async => drun(argv);
 
-/// Updates the version of the Dart SDK that thjis repo uses.
-Future<void> updateDartSdk([String nextVersion]) async {
-  var dartVersionFile = File(p.absolute('.dart-version'));
-  var currentVersion = await dartVersionFile.readAsString();
-  await Future.wait([
-    _searchReplaceFile(
-      dartVersionFile,
-      currentVersion,
-      nextVersion,
-    ),
-    _searchReplaceFile(
-      File(p.absolute('.github/workflows/main.yml')),
-      currentVersion,
-      nextVersion,
-    ),
-  ]);
-}
-
 /// Gets things ready to perform a release.
 ///
 /// * [nextVersion] Should be a valid semver version number string.
@@ -58,8 +40,10 @@ Future<void> releasePrepare(
 }
 
 /// Takes the native binaries and creates distributable archives.
-Future<void> generateArchives(String nextVersion,
-    [String assetsDir = './github-assets']) async {
+Future<void> generateArchives(
+  String nextVersion, [
+  String assetsDir = './github-assets',
+]) async {
   var commonFiles = [
     File(p.absolute('README.md')),
     File(p.absolute('CHANGELOG.md')),
@@ -83,7 +67,12 @@ Future<void> generateArchives(String nextVersion,
           await _.readAsBytes(),
         ),
       )))
-          .forEach((_) => archive.addFile(_));
+          .forEach((_) {
+        if (_.name == 'drun') {
+          _.mode = 493;
+        }
+        archive.addFile(_);
+      });
 
       await File(p.join(assetsDir, 'drun-linux-x64.tar.gz')).writeAsBytes(
         GZipEncoder().encode(
@@ -91,6 +80,7 @@ Future<void> generateArchives(String nextVersion,
         ),
       );
 
+      await dexeca('chmod', ['+x', p.join(assetsDir, 'drun-linux-x64')]);
       await _execNfpm(nextVersion, p.join(assetsDir, 'drun-linux-x64.rpm'));
       await _execNfpm(nextVersion, p.join(assetsDir, 'drun-linux-x64.deb'));
 
@@ -113,7 +103,12 @@ Future<void> generateArchives(String nextVersion,
           await _.readAsBytes(),
         ),
       )))
-          .forEach((_) => archive.addFile(_));
+          .forEach((_) {
+        if (_.name == 'drun') {
+          _.mode = 493;
+        }
+        archive.addFile(_);
+      });
 
       await File(p.join(assetsDir, 'drun-darwin-x64.tar.gz')).writeAsBytes(
         GZipEncoder().encode(
