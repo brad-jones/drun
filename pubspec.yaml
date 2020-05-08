@@ -13,15 +13,16 @@ dependencies:
   io: ^0.3.3
   args: ^1.5.3
   path: ^1.7.0
+  http: ^0.12.1
   dexeca: ^1.0.1
   dotenv: ^2.0.0
   recase: ^3.0.0
   console: ^3.1.0
   dexecve: ^1.1.0
+  archive: ^2.0.13
   stack_trace: ^1.9.3
 
 dev_dependencies:
-  archive: ^2.0.13
   crypto: ^2.1.4
   pedantic: ^1.8.0
   pretty_json: ^1.0.8

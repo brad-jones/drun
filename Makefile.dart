@@ -1,3 +1,4 @@
+#!/usr/bin/env -S pub run drun
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
