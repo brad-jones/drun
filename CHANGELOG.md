@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/brad-jones/drun/compare/v2.0.3...v2.1.0) (2020-05-08)
+
+
+### Features
+
+* drun the binary now installs dart and run pub get if needed ([5b18bdf](https://github.com/brad-jones/drun/commit/5b18bdfda33995a4f4c898d028ff4279d5e671d7))
+
 ## [2.0.3](https://github.com/brad-jones/drun/compare/v2.0.2...v2.0.3) (2020-05-07)
 
 
