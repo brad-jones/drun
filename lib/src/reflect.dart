@@ -80,7 +80,7 @@ Map<String, MethodMirror> reflectOptions(Map<Uri, LibraryMirror> libs) {
 
   if (optionsClass != null) {
     for (var e in optionsClass.staticMembers.entries) {
-      if (e.value.source.contains('GlobalOptions.value')) {
+      if (e.value.source?.contains('GlobalOptions.value') ?? false) {
         options[MirrorSystem.getName(e.key).paramCase] = e.value;
       }
     }
