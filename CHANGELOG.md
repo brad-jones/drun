@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/brad-jones/drun/compare/v2.1.0...v2.1.1) (2020-05-14)
+
+
+### Bug Fixes
+
+* **reflect:** allow other types of members inside options class ([a4ff2df](https://github.com/brad-jones/drun/commit/a4ff2df5d82a6210cf3615aa0b9b80cd77c905f8))
+
 # [2.1.0](https://github.com/brad-jones/drun/compare/v2.0.3...v2.1.0) (2020-05-08)
 
 
