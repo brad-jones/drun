@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:drun/drun.dart';
 
 // Global options can be defined in another file or inline anywhere in your makefile
@@ -156,3 +157,8 @@ Future<void> runsOnceAsyncExample() async {
 Future<void> myTaskThatRunsOnceAsync() => runOnce<void>(() async {
       print('If you see me more than once something we wrong');
     });
+
+Future<void> myTaskThatRunsIfNotFound() => runIfNotFound<void>(() async {
+      print('should only see me if the file `./bin/baz/foo` does not exist');
+      await File('./bin/baz/foo').create(recursive: true);
+    }, ['./bin/**/foo']);

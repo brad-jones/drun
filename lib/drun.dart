@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:mirrors';
 import 'dart:convert';
 import 'package:io/ansi.dart';
+import 'package:glob/glob.dart';
 import 'package:async/async.dart';
 import 'package:recase/recase.dart';
 import 'package:crypto/crypto.dart';
@@ -233,3 +234,37 @@ Future<T> runOnce<T>(FutureOr<T> Function() computation) async {
 }
 
 var _onceTasks = <Digest, AsyncMemoizer>{};
+
+/// Will only execute [computation] if one of the [globs] doesn't match anything
+///
+/// For example:
+///
+/// ```dart
+/// import 'package:drun/drun.dart';
+///
+/// Future<void> main(List<String> argv) => drun(argv);
+///
+/// Future<void> build() => runIfNotFound<void>(() async {
+///   print('building ./bin/foo');
+/// }, ['./bin/foo']);
+/// ```
+Future<T> runIfNotFound<T>(
+  FutureOr<T> Function() computation,
+  List<String> globs,
+) async {
+  for (var glob in globs) {
+    var found = false;
+    try {
+      await for (var _ in Glob(glob).list()) {
+        found = true;
+        break;
+      }
+    } on FileSystemException {
+      found = false;
+    }
+    if (!found) {
+      return await computation();
+    }
+  }
+  return null;
+}
