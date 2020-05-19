@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/brad-jones/drun/compare/v2.4.0...v2.4.1) (2020-05-19)
+
+
+### Bug Fixes
+
+* **pubspec:** crypto is now a lib dependency ([2bed7ec](https://github.com/brad-jones/drun/commit/2bed7ecc5065db4feb033bd81da4c1250bddf6a1))
+
 # [2.4.0](https://github.com/brad-jones/drun/compare/v2.3.0...v2.4.0) (2020-05-19)
 
 
