@@ -113,3 +113,24 @@ void myTaskWithGlobalOptions() {
   print(Options.xyz);
   print(Options.foobar);
 }
+
+/// An example of using drun's logging
+Future<void> myTaskThatLogs() async {
+  await Future.wait([
+    myTaskThatLogsFoo(),
+    myTaskThatLogsBar(),
+    myTaskThatLogsBaz(),
+  ]);
+}
+
+Future<void> myTaskThatLogsFoo() async {
+  log('i did some work');
+}
+
+Future<void> myTaskThatLogsBar() async {
+  log('i did some work');
+}
+
+Future<void> myTaskThatLogsBaz() async {
+  log('i did some work', prefix: 'custom-prefix');
+}
