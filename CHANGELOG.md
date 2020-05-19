@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/brad-jones/drun/compare/v2.3.0...v2.4.0) (2020-05-19)
+
+
+### Features
+
+* **runifnotfound:** new function that only runs if files are not found ([486c245](https://github.com/brad-jones/drun/commit/486c2455ff05ac231cff15eb4de58ff1185639ad))
+
 # [2.3.0](https://github.com/brad-jones/drun/compare/v2.2.0...v2.3.0) (2020-05-19)
 
 
