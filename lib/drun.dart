@@ -176,6 +176,65 @@ AnsiPen logPen(String prefix) {
   return AnsiPen()..xterm(_prefixToColor[prefix]);
 }
 
+/// A shortcut for using [runOnce], [runIfNotFound] & [runIfChanged] altogether.
+Future<T> run<T>(
+  FutureOr<T> Function() computation, {
+  bool once = false,
+  List<String> ifNotFound,
+  List<String> ifChanged,
+}) async {
+  if ((ifNotFound?.isEmpty ?? true) && (ifChanged?.isEmpty ?? true) && !once) {
+    return await computation();
+  }
+
+  if ((ifNotFound?.isEmpty ?? true) && (ifChanged?.isEmpty ?? true) && once) {
+    return runOnce<T>(computation);
+  }
+
+  FutureOr<T> Function() executor = () async {
+    T result;
+
+    var executed = false;
+    if (ifNotFound?.isNotEmpty ?? false) {
+      for (var glob in ifNotFound) {
+        var found = false;
+        try {
+          await for (var _ in Glob(glob).list()) {
+            found = true;
+            break;
+          }
+        } on FileSystemException {
+          found = false;
+        }
+        if (!found) {
+          executed = true;
+          result = await computation();
+        }
+      }
+    }
+
+    if (ifChanged?.isNotEmpty ?? false) {
+      if (executed) {
+        await _saveCurrentState(ifChanged);
+      } else {
+        result = await runIfChanged(computation, ifChanged);
+      }
+    }
+
+    return result;
+  };
+
+  if (once) {
+    var reflected = reflect(computation) as ClosureMirror;
+    return runOnce<T>(
+      executor,
+      key: md5.convert(utf8.encode(reflected.function.source)).toString(),
+    );
+  }
+
+  return await executor();
+}
+
 /// Will only execute [computation] once for a single execution of `drun`.
 /// This is very handy for constructing complex dependant build chains.
 ///
@@ -213,7 +272,7 @@ AnsiPen logPen(String prefix) {
 /// bar did some work
 /// baz did some work
 /// ```
-Future<T> runOnce<T>(FutureOr<T> Function() computation) async {
+Future<T> runOnce<T>(FutureOr<T> Function() computation, {String key}) async {
   /*
     We have to resort to reflection because in dartlang everytime a closure
     is created it is seen as different object. This could be resolved by
@@ -226,15 +285,17 @@ Future<T> runOnce<T>(FutureOr<T> Function() computation) async {
 
     But that is super ugly.
   */
-  var reflected = reflect(computation) as ClosureMirror;
-  var key = md5.convert(utf8.encode(reflected.function.source));
+  if (key == null) {
+    var reflected = reflect(computation) as ClosureMirror;
+    key = md5.convert(utf8.encode(reflected.function.source)).toString();
+  }
   if (!_onceTasks.containsKey(key)) {
     _onceTasks[key] = AsyncMemoizer<T>();
   }
   return _onceTasks[key].runOnce(computation);
 }
 
-var _onceTasks = <Digest, AsyncMemoizer>{};
+var _onceTasks = <String, AsyncMemoizer>{};
 
 /// Will only execute [computation] if one of the [globs] doesn't match anything
 ///
@@ -334,6 +395,35 @@ Future<T> runIfChanged<T>(
   }
 
   return null;
+}
+
+Future<void> _saveCurrentState(
+  List<String> globs, {
+  ChangedMethod method = ChangedMethod.timestamp,
+}) async {
+  var currentStateItems = <String, String>{};
+  for (var glob in globs) {
+    await for (var f in Glob(glob).list()) {
+      String value;
+      if (method == ChangedMethod.timestamp) {
+        value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
+      } else {
+        value = await _sha256File(f.path).toString();
+      }
+      currentStateItems[p.canonicalize(f.path)] = value;
+    }
+  }
+
+  var currentStateBuffer = StringBuffer();
+  for (var k in currentStateItems.keys.toList()..sort()) {
+    currentStateBuffer.write(k);
+    currentStateBuffer.write(currentStateItems[k]);
+  }
+
+  var currentState = _sha256String(currentStateBuffer.toString());
+  await (await File(p.absolute('.drun_tool', 'run-if-changed-state'))
+          .create(recursive: true))
+      .writeAsString(currentState);
 }
 
 String _sha256String(String value) {

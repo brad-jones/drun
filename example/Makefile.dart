@@ -170,3 +170,15 @@ Future<void> myTaskThatRunsIfChanged() => runIfChanged<void>(() async {
       print('You should only see me if this '
           'file has changed since the last time this task was run');
     }, ['./Makefile.dart']);
+
+/// Example of using the `run` function.
+Future<void> runExample() => run<void>(
+      () async {
+        print('this function should only run when any of the conditions, '
+            '`once`, `ifNotFound` & `ifChanged` are meet.');
+        await File('./bin/baz/foo').create(recursive: true);
+      },
+      once: true,
+      ifNotFound: ['./bin/**/foo'],
+      ifChanged: ['./Makefile.dart'],
+    );
