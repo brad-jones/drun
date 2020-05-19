@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/brad-jones/drun/compare/v2.4.1...v2.5.0) (2020-05-19)
+
+
+### Features
+
+* **runifchanged:** function that executes only if files have changed ([d1bd522](https://github.com/brad-jones/drun/commit/d1bd522050a6350af3245afddecdf0b984e73c81))
+
 ## [2.4.1](https://github.com/brad-jones/drun/compare/v2.4.0...v2.4.1) (2020-05-19)
 
 
