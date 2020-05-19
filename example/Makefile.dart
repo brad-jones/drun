@@ -134,3 +134,25 @@ Future<void> myTaskThatLogsBar() async {
 Future<void> myTaskThatLogsBaz() async {
   log('i did some work', prefix: 'custom-prefix');
 }
+
+/// Example of using the `runOnce` function.
+void runsOnceExample() {
+  myTaskThatRunsOnce();
+  myTaskThatRunsOnce();
+  myTaskThatRunsOnce();
+}
+
+void myTaskThatRunsOnce() => runOnce<void>(() {
+      print('If you see me more than once something we wrong');
+    });
+
+/// Example of using the `runOnce` function.
+Future<void> runsOnceAsyncExample() async {
+  await myTaskThatRunsOnce();
+  await myTaskThatRunsOnce();
+  await myTaskThatRunsOnce();
+}
+
+Future<void> myTaskThatRunsOnceAsync() => runOnce<void>(() async {
+      print('If you see me more than once something we wrong');
+    });

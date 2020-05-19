@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:async';
 import 'dart:mirrors';
+import 'dart:convert';
 import 'package:io/ansi.dart';
+import 'package:async/async.dart';
 import 'package:recase/recase.dart';
+import 'package:crypto/crypto.dart';
 import 'package:drun/src/build.dart';
 import 'package:path/path.dart' as p;
 import 'package:drun/src/reflect.dart';
@@ -169,3 +173,63 @@ AnsiPen logPen(String prefix) {
 
   return AnsiPen()..xterm(_prefixToColor[prefix]);
 }
+
+/// Will only execute [computation] once for a single execution of `drun`.
+/// This is very handy for constructing complex dependant build chains.
+///
+/// For example:
+///
+/// ```dart
+/// import 'package:drun/drun.dart';
+///
+/// Future<void> main(List<String> argv) => drun(argv);
+///
+/// Future<void> foo() => runOnce<void>(() async {
+///   print('foo did some work');
+/// });
+///
+/// Future<void> bar() async {
+///   await foo();
+///   print('bar did some work');
+/// }
+///
+/// Future<void> baz() async {
+///   await foo();
+///   print('baz did some work');
+/// }
+///
+/// Future<void> build() async {
+///   await bar();
+///   await baz();
+/// }
+/// ```
+///
+/// Executing `drun build` will output:
+///
+/// ```
+/// foo did some work
+/// bar did some work
+/// baz did some work
+/// ```
+Future<T> runOnce<T>(FutureOr<T> Function() computation) async {
+  /*
+    We have to resort to reflection because in dartlang everytime a closure
+    is created it is seen as different object. This could be resolved by
+    writing something like:
+
+    ```dart
+      var _foo = () async { print('foo did some work'); }
+      Future<void> foo() => runOnce<void>(_foo);
+    ```
+
+    But that is super ugly.
+  */
+  var reflected = reflect(computation) as ClosureMirror;
+  var key = md5.convert(utf8.encode(reflected.function.source));
+  if (!_onceTasks.containsKey(key)) {
+    _onceTasks[key] = AsyncMemoizer<T>();
+  }
+  return _onceTasks[key].runOnce(computation);
+}
+
+var _onceTasks = <Digest, AsyncMemoizer>{};

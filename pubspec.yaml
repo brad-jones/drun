@@ -13,6 +13,7 @@ dependencies:
   ansicolor: ^1.0.2
   archive: ^2.0.13
   args: ^1.5.3
+  async: ^2.4.1
   console: ^3.1.0
   dexeca: ^1.0.1
   dexecve: ^1.1.0
