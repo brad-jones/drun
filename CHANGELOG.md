@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/brad-jones/drun/compare/v2.2.0...v2.3.0) (2020-05-19)
+
+
+### Features
+
+* **runonce:** will run a task only once for a single drun execution ([deae68f](https://github.com/brad-jones/drun/commit/deae68fb95f8a307139624df9cb13c89a09ba687))
+
 # [2.2.0](https://github.com/brad-jones/drun/compare/v2.1.1...v2.2.0) (2020-05-19)
 
 
