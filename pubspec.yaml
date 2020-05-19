@@ -15,6 +15,7 @@ dependencies:
   args: ^1.5.3
   async: ^2.4.1
   console: ^3.1.0
+  convert: ^2.1.1
   crypto: ^2.1.4
   dexeca: ^1.0.1
   dexecve: ^1.1.0

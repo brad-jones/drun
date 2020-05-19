@@ -10,6 +10,7 @@ import 'package:recase/recase.dart';
 import 'package:crypto/crypto.dart';
 import 'package:drun/src/build.dart';
 import 'package:path/path.dart' as p;
+import 'package:convert/convert.dart';
 import 'package:drun/src/reflect.dart';
 import 'package:drun/src/executor.dart';
 import 'package:ansicolor/ansicolor.dart';
@@ -267,4 +268,84 @@ Future<T> runIfNotFound<T>(
     }
   }
   return null;
+}
+
+/// The way in which [runIfChanged] will check if files have changed
+enum ChangedMethod { checksum, timestamp }
+
+/// Will only execute [computation] if one of the [globs] has changed.
+///
+/// You have the option to change [method] to checksum if comparing modified
+/// timestamps is not reliable enough.
+///
+/// For example:
+///
+/// ```dart
+/// import 'package:drun/drun.dart';
+///
+/// Future<void> main(List<String> argv) => drun(argv);
+///
+/// Future<void> build() => runIfChanged<void>(() async {
+///   print('building ./bin/foo');
+/// }, ['./bin/foo']);
+/// ```
+///
+/// You might also like to add `.drun_tool` to your `.gitignore` as this is
+/// where information about the state of the files will be kept.
+Future<T> runIfChanged<T>(
+  FutureOr<T> Function() computation,
+  List<String> globs, {
+  ChangedMethod method = ChangedMethod.timestamp,
+}) async {
+  var currentStateItems = <String, String>{};
+  for (var glob in globs) {
+    await for (var f in Glob(glob).list()) {
+      String value;
+      if (method == ChangedMethod.timestamp) {
+        value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
+      } else {
+        value = await _sha256File(f.path).toString();
+      }
+      currentStateItems[p.canonicalize(f.path)] = value;
+    }
+  }
+
+  var currentStateBuffer = StringBuffer();
+  for (var k in currentStateItems.keys.toList()..sort()) {
+    currentStateBuffer.write(k);
+    currentStateBuffer.write(currentStateItems[k]);
+  }
+
+  var currentState = _sha256String(currentStateBuffer.toString());
+
+  String previousState;
+  var previousStateFile =
+      await File(p.absolute('.drun_tool', 'run-if-changed-state'));
+  if (await previousStateFile.exists()) {
+    previousState = await previousStateFile.readAsString();
+  } else {
+    await previousStateFile.create(recursive: true);
+  }
+
+  if (currentState != previousState) {
+    var result = await computation();
+    await previousStateFile.writeAsString(currentState);
+    return result;
+  }
+
+  return null;
+}
+
+String _sha256String(String value) {
+  return sha256.convert(utf8.encode(value)).toString();
+}
+
+Future<Digest> _sha256File(String path) async {
+  var output = AccumulatorSink<Digest>();
+  var input = sha256.startChunkedConversion(output);
+  await for (var chunk in File(path).openRead()) {
+    input.add(chunk);
+  }
+  input.close();
+  return output.events.single;
 }

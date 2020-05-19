@@ -144,7 +144,7 @@ void runsOnceExample() {
 }
 
 void myTaskThatRunsOnce() => runOnce<void>(() {
-      print('If you see me more than once something we wrong');
+      print('If you see me more than once something went wrong');
     });
 
 /// Example of using the `runOnce` function.
@@ -155,10 +155,18 @@ Future<void> runsOnceAsyncExample() async {
 }
 
 Future<void> myTaskThatRunsOnceAsync() => runOnce<void>(() async {
-      print('If you see me more than once something we wrong');
+      print('If you see me more than once something went wrong');
     });
 
+/// Example of using the `runIfNotFound` function.
 Future<void> myTaskThatRunsIfNotFound() => runIfNotFound<void>(() async {
-      print('should only see me if the file `./bin/baz/foo` does not exist');
+      print('You should only see me if the '
+          'file `./bin/baz/foo` does not exist');
       await File('./bin/baz/foo').create(recursive: true);
     }, ['./bin/**/foo']);
+
+/// Example of using the `runIfChanged` function.
+Future<void> myTaskThatRunsIfChanged() => runIfChanged<void>(() async {
+      print('You should only see me if this '
+          'file has changed since the last time this task was run');
+    }, ['./Makefile.dart']);
