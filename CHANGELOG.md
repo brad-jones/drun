@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/brad-jones/drun/compare/v2.1.1...v2.2.0) (2020-05-19)
+
+
+### Features
+
+* **log:** add some simple logging functionality ([1348950](https://github.com/brad-jones/drun/commit/1348950beec0f69f3a4e4bd4af80132bf6474167))
+
 ## [2.1.1](https://github.com/brad-jones/drun/compare/v2.1.0...v2.1.1) (2020-05-14)
 
 
