@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/brad-jones/drun/compare/v2.5.0...v2.6.0) (2020-05-19)
+
+
+### Features
+
+* **run:** functin that combines the other runX functions ([8dce0f1](https://github.com/brad-jones/drun/commit/8dce0f1ad9c6554eef95f8a58f25a43997924dcf))
+
 # [2.5.0](https://github.com/brad-jones/drun/compare/v2.4.1...v2.5.0) (2020-05-19)
 
 
