@@ -45,7 +45,7 @@ Map<String, MethodMirror> reflectTasks(
           .whereType<MethodMirror>()
           .where((v) => v.simpleName != Symbol('main') && !v.isPrivate)) {
         var prefix = deps.entries
-            .singleWhere(
+            .firstWhere(
                 (_) =>
                     _.value.location.sourceUri ==
                     (task.owner as LibraryMirror).uri,
