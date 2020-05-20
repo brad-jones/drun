@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/brad-jones/drun/compare/v2.6.0...v2.6.1) (2020-05-20)
+
+
+### Bug Fixes
+
+* **reflect:** it is possible to have multiple prefixes of the same name ([2a28ac5](https://github.com/brad-jones/drun/commit/2a28ac5aa90ef868063f1db611320d43e20dbd1f))
+
 # [2.6.0](https://github.com/brad-jones/drun/compare/v2.5.0...v2.6.0) (2020-05-19)
 
 
