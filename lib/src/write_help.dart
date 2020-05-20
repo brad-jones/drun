@@ -51,12 +51,24 @@ Future<void> writeHelp(
   if (parsedArgv.command == null) {
     // output a list of tasks
     stdout.writeln('Tasks:');
-    for (var docBlock in docBlocks) {
+    for (var docBlock in docBlocks.where((_) => !_.funcName.contains(':'))) {
       Console.setBold(true);
       stdout.write('  ${docBlock.funcName}');
       Console.resetAll();
       stdout.write(': ${docBlock.summary}');
       stdout.writeln();
+    }
+    var subTasks = docBlocks.where((_) => _.funcName.contains(':'));
+    if (subTasks.isNotEmpty) {
+      stdout.writeln();
+      stdout.writeln('Sub Tasks:');
+      for (var docBlock in subTasks) {
+        Console.setBold(true);
+        stdout.write('  ${docBlock.funcName}');
+        Console.resetAll();
+        stdout.write(': ${docBlock.summary}');
+        stdout.writeln();
+      }
     }
     stdout.writeln();
   } else {
