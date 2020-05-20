@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/brad-jones/drun/compare/v2.7.0...v2.8.0) (2020-05-20)
+
+
+### Features
+
+* **hidesubtasks:** add the ability to hide sub tasks from help txt ([39109b5](https://github.com/brad-jones/drun/commit/39109b5504909874404400a1bab437733a21306c))
+
 # [2.7.0](https://github.com/brad-jones/drun/compare/v2.6.1...v2.7.0) (2020-05-20)
 
 
