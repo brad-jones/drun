@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/brad-jones/drun/compare/v2.6.1...v2.7.0) (2020-05-20)
+
+
+### Features
+
+* **help:** list sub tasks seperatly from primary tasks ([77fa29d](https://github.com/brad-jones/drun/commit/77fa29d99edca7250246439f725aa283bffb9e6b))
+
 ## [2.6.1](https://github.com/brad-jones/drun/compare/v2.6.0...v2.6.1) (2020-05-20)
 
 
