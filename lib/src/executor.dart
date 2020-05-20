@@ -14,6 +14,7 @@ Future<void> executor(
   Map<String, MethodMirror> tasks,
   Map<String, MethodMirror> options,
   ArgResults parsedArgv,
+  bool hideSubtasks,
 ) async {
   if (parsedArgv.wasParsed('version')) {
     stdout.writeln(_version);
@@ -21,14 +22,19 @@ Future<void> executor(
   }
 
   if (parsedArgv.command == null) {
-    await writeHelp(tasks, options, parsedArgv);
+    await writeHelp(tasks, options, parsedArgv, hideSubtasks);
     return;
   }
 
   var task = tasks[parsedArgv.command.name];
 
   if (parsedArgv.wasParsed('help')) {
-    await writeHelp({parsedArgv.command.name: task}, options, parsedArgv);
+    await writeHelp(
+      {parsedArgv.command.name: task},
+      options,
+      parsedArgv,
+      hideSubtasks,
+    );
     return;
   }
 

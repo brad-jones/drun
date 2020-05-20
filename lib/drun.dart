@@ -23,6 +23,20 @@ export 'package:drun/src/global_options.dart';
 
 /// The main entry point for any `Makefile.dart`.
 ///
+/// * [argv] A list of strings that represent the raw arguments passed to this
+///   task runner on the command line.
+///
+/// * [dotEnvFilePath] By default we look for a `.env` file relative to the
+///   location of `Makefile.dart` and attempt to parse that file with `dotenv`.
+///   You can supply a custom path if you wish. In any case, if no such file
+///   exists then the `dotenv` parsing is simply skipped.
+///
+/// * [hideSubtasks] If set to true then the generated help text will not
+///   output sub tasks. This doesn't stop the sub tasks from being called
+///   it just doesn't show the sub task list. This is handy for some larger
+///   projects where the sub tasks add too much noise and may cause confusion
+///   for other developers working on your project.
+///
 /// Usage example:
 ///
 /// ```dart
@@ -32,7 +46,11 @@ export 'package:drun/src/global_options.dart';
 ///
 /// // your task functions go here
 /// ```
-Future<void> drun(List<String> argv, {String dotEnvFilePath = '.env'}) async {
+Future<void> drun(
+  List<String> argv, {
+  String dotEnvFilePath = '.env',
+  bool hideSubtasks = false,
+}) async {
   var exitCode = 0;
   try {
     // If a `.env` file exists alongside out `Makefile.dart` lets parse it
@@ -60,7 +78,7 @@ Future<void> drun(List<String> argv, {String dotEnvFilePath = '.env'}) async {
     GlobalOptions.options = options;
 
     // Finally execute the app
-    await executor(libs, tasks, options, parsedArgv);
+    await executor(libs, tasks, options, parsedArgv, hideSubtasks);
   } catch (e, st) {
     await writeError(e, st);
     exitCode = 1;

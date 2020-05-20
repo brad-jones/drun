@@ -22,6 +22,7 @@ Future<void> writeHelp(
   Map<String, MethodMirror> tasks,
   Map<String, MethodMirror> options,
   ArgResults parsedArgv,
+  bool hideSubtasks,
 ) async {
   Console.init();
 
@@ -58,16 +59,21 @@ Future<void> writeHelp(
       stdout.write(': ${docBlock.summary}');
       stdout.writeln();
     }
-    var subTasks = docBlocks.where((_) => _.funcName.contains(':'));
-    if (subTasks.isNotEmpty) {
-      stdout.writeln();
-      stdout.writeln('Sub Tasks:');
-      for (var docBlock in subTasks) {
-        Console.setBold(true);
-        stdout.write('  ${docBlock.funcName}');
-        Console.resetAll();
-        stdout.write(': ${docBlock.summary}');
+
+    // If enabled output a list of all sub tasks
+    // NOTE: Sub Tasks can still be called regardless of this setting
+    if (!hideSubtasks) {
+      var subTasks = docBlocks.where((_) => _.funcName.contains(':'));
+      if (subTasks.isNotEmpty) {
         stdout.writeln();
+        stdout.writeln('Sub Tasks:');
+        for (var docBlock in subTasks) {
+          Console.setBold(true);
+          stdout.write('  ${docBlock.funcName}');
+          Console.resetAll();
+          stdout.write(': ${docBlock.summary}');
+          stdout.writeln();
+        }
       }
     }
     stdout.writeln();
