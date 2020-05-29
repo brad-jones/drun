@@ -10,6 +10,8 @@ ArgParser buildArgParser(
   var parser = ArgParser();
   parser.addFlag('help', abbr: 'h');
   parser.addFlag('version', abbr: 'v');
+  parser.addFlag('show-subtasks');
+  parser.addFlag('log-buffered');
 
   for (var e in options.entries) {
     var abbrValue =

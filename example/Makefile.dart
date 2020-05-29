@@ -136,49 +136,57 @@ Future<void> myTaskThatLogsBaz() async {
   log('i did some work', prefix: 'custom-prefix');
 }
 
-/// Example of using the `runOnce` function.
-void runsOnceExample() {
-  myTaskThatRunsOnce();
-  myTaskThatRunsOnce();
-  myTaskThatRunsOnce();
-}
-
-void myTaskThatRunsOnce() => runOnce<void>(() {
-      print('If you see me more than once something went wrong');
+/// Runs a task using the drun task() helper function
+///
+/// Up until now all tasks have been plain dart functions.
+/// Drun provides additional functionality through the [task] wrapper.
+/// It is totally optional if you use this, the next few examples show
+/// off what is possible.
+Future<void> myTaskThatUsesTaskHelper() => task(() {
+      print('Hello');
     });
 
-/// Example of using the `runOnce` function.
-Future<void> runsOnceAsyncExample() async {
-  await myTaskThatRunsOnce();
-  await myTaskThatRunsOnce();
-  await myTaskThatRunsOnce();
-}
+/// An example of running the same task many times but only having it truly
+/// execute once. This is very hand for constructing complex build graphs/chains
+/// where multiple tasks may all depend on a common task.
+Future<void> myTaskThatRunsOnceExample() => task(() => Future.wait([
+      myTaskThatRunsOnce(),
+      myTaskThatRunsOnce(),
+      myTaskThatRunsOnce(),
+    ]));
 
-Future<void> myTaskThatRunsOnceAsync() => runOnce<void>(() async {
-      print('If you see me more than once something went wrong');
-    });
+/// part of the [myTaskThatRunsOnceExample]
+Future<void> myTaskThatRunsOnce() => task(
+      () {
+        print('you should only see me printed one time');
+      },
+      runOnce: '9b5f1470-4ced-461a-b9d0-505dd44f91cc',
+    );
 
-/// Example of using the `runIfNotFound` function.
-Future<void> myTaskThatRunsIfNotFound() => runIfNotFound<void>(() async {
-      print('You should only see me if the '
-          'file `./bin/baz/foo` does not exist');
-      await File('./bin/baz/foo').create(recursive: true);
-    }, ['./bin/**/foo']);
-
-/// Example of using the `runIfChanged` function.
-Future<void> myTaskThatRunsIfChanged() => runIfChanged<void>(() async {
-      print('You should only see me if this '
-          'file has changed since the last time this task was run');
-    }, ['./Makefile.dart']);
-
-/// Example of using the `run` function.
-Future<void> runExample() => run<void>(
+/// Example of using the `runIfNotFound` functionality.
+///
+/// This is handy for ensuring tasks that generate artifacts only run when the
+/// artifact doesn't already exist.
+Future<void> myTaskThatRunsIfNotFound() => task(
       () async {
-        print('this function should only run when any of the conditions, '
-            '`once`, `ifNotFound` & `ifChanged` are meet.');
+        print('You should only see me if the '
+            'file `./bin/baz/foo` does not exist');
         await File('./bin/baz/foo').create(recursive: true);
       },
-      once: true,
-      ifNotFound: ['./bin/**/foo'],
-      ifChanged: ['./Makefile.dart'],
+      runIfNotFound: ['./bin/**/foo'],
+    );
+
+/// Example of using the `runIfChanged` functionality.
+///
+/// This is handy for ensuring tasks that generate artifacts from source files
+/// only run when those source files have changed since the last execution.
+///
+/// Using this with [runIfNotFound] is very useful. The 2 conditions are OR'ed.
+Future<void> myTaskThatRunsIfChanged() => task(
+      () async {
+        print('You should only see me if this '
+            'file has changed since the last time this task was run.\n'
+            'Perhaps just edit this message to test this out :)');
+      },
+      runIfChanged: ['./Makefile.dart'],
     );

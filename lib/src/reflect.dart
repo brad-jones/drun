@@ -1,6 +1,7 @@
 import 'dart:mirrors';
 import 'package:recase/recase.dart';
 import 'package:drun/src/global_options.dart';
+import 'package:stack_trace/stack_trace.dart';
 
 Map<Uri, LibraryMirror> reflectLibs(MirrorSystem ms) {
   var libs = <Uri, LibraryMirror>{};
@@ -87,4 +88,8 @@ Map<String, MethodMirror> reflectOptions(Map<Uri, LibraryMirror> libs) {
   }
 
   return options;
+}
+
+String frameKey(Frame f) {
+  return '${f.column}${f.line}${f.member}${f.uri}';
 }

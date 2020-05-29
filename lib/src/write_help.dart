@@ -22,7 +22,7 @@ Future<void> writeHelp(
   Map<String, MethodMirror> tasks,
   Map<String, MethodMirror> options,
   ArgResults parsedArgv,
-  bool hideSubtasks,
+  bool showSubtasks,
 ) async {
   Console.init();
 
@@ -62,7 +62,7 @@ Future<void> writeHelp(
 
     // If enabled output a list of all sub tasks
     // NOTE: Sub Tasks can still be called regardless of this setting
-    if (!hideSubtasks) {
+    if (showSubtasks) {
       var subTasks = docBlocks.where((_) => _.funcName.contains(':'));
       if (subTasks.isNotEmpty) {
         stdout.writeln();
@@ -226,6 +226,31 @@ Future<void> writeHelp(
   stdout.writeln();
   Console.resetAll();
   stdout.writeln('  Shows this help text for any task.');
+  stdout.writeln();
+
+  Console.setBold(true);
+  Console.setUnderline(true);
+  Console.setTextColor(Color.GRAY.id);
+  var showSubTasksFlag = '  --show-subtasks';
+  stdout.write(showSubTasksFlag);
+  stdout.write(
+      '<env:DRUN_SHOW_SUBTASKS> [bool]'.padLeft(80 - showSubTasksFlag.length));
+  stdout.writeln();
+  Console.resetAll();
+  stdout
+      .writeln('  Shows tasks from other included Makefiles on the help page.');
+  stdout.writeln();
+
+  Console.setBold(true);
+  Console.setUnderline(true);
+  Console.setTextColor(Color.GRAY.id);
+  var logBufferedFlag = '  --log-buffered';
+  stdout.write(logBufferedFlag);
+  stdout.write(
+      '<env:DRUN_LOG_BUFFERED> [bool]'.padLeft(80 - logBufferedFlag.length));
+  stdout.writeln();
+  Console.resetAll();
+  stdout.writeln('  If set then logs will be buffered and output in groups.');
   stdout.writeln();
 
   await stdout.flush();

@@ -6,6 +6,7 @@ import 'package:drun/src/write_help.dart';
 import 'package:drun/src/annotations.dart';
 import 'package:drun/src/type_parser.dart';
 import 'package:dotenv/dotenv.dart' as dotenv;
+import 'package:drun/src/logging.dart' as logging;
 
 const _version = '0.0.0-semantically-released';
 
@@ -14,15 +15,20 @@ Future<void> executor(
   Map<String, MethodMirror> tasks,
   Map<String, MethodMirror> options,
   ArgResults parsedArgv,
-  bool hideSubtasks,
+  bool showSubtasks,
 ) async {
   if (parsedArgv.wasParsed('version')) {
     stdout.writeln(_version);
     return;
   }
 
+  if (parsedArgv.wasParsed('show-subtasks') ||
+      Platform.environment.containsKey('DRUN_SHOW_SUBTASKS')) {
+    showSubtasks = true;
+  }
+
   if (parsedArgv.command == null) {
-    await writeHelp(tasks, options, parsedArgv, hideSubtasks);
+    await writeHelp(tasks, options, parsedArgv, showSubtasks);
     return;
   }
 
@@ -33,9 +39,22 @@ Future<void> executor(
       {parsedArgv.command.name: task},
       options,
       parsedArgv,
-      hideSubtasks,
+      showSubtasks,
     );
     return;
+  }
+
+  if (parsedArgv.wasParsed('log-buffered') ||
+      Platform.environment.containsKey('DRUN_LOG_BUFFERED')) {
+    logging.buffered = true;
+  }
+
+  if (Platform.environment.containsKey('DRUN_LOG_BUFFERED_TPL')) {
+    logging.bufferedTpl = Platform.environment['DRUN_LOG_BUFFERED_TPL'];
+  }
+
+  if (Platform.environment.containsKey('DRUN_LOG_PREFIX_SEPERATOR')) {
+    logging.prefixSeperator = Platform.environment['DRUN_LOG_PREFIX_SEPERATOR'];
   }
 
   var taskParameterValues = task.parameters.map((p) {

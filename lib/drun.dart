@@ -2,24 +2,24 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:async';
 import 'dart:mirrors';
-import 'dart:convert';
 import 'package:io/ansi.dart';
-import 'package:glob/glob.dart';
-import 'package:async/async.dart';
+import 'package:drun/src/run.dart';
 import 'package:recase/recase.dart';
-import 'package:crypto/crypto.dart';
 import 'package:drun/src/build.dart';
 import 'package:path/path.dart' as p;
-import 'package:convert/convert.dart';
 import 'package:drun/src/reflect.dart';
 import 'package:drun/src/executor.dart';
 import 'package:ansicolor/ansicolor.dart';
 export 'package:drun/src/annotations.dart';
 import 'package:drun/src/write_error.dart';
+import 'package:drun/src/changed_method.dart';
+export 'package:drun/src/changed_method.dart';
 import 'package:dotenv/dotenv.dart' as dotenv;
 import 'package:drun/src/global_options.dart';
 import 'package:stack_trace/stack_trace.dart';
 export 'package:drun/src/global_options.dart';
+import 'package:drun/src/logging.dart' as logging;
+import 'package:mustache_template/mustache_template.dart';
 
 /// The main entry point for any `Makefile.dart`.
 ///
@@ -31,7 +31,7 @@ export 'package:drun/src/global_options.dart';
 ///   You can supply a custom path if you wish. In any case, if no such file
 ///   exists then the `dotenv` parsing is simply skipped.
 ///
-/// * [hideSubtasks] If set to true then the generated help text will not
+/// * [showSubtasks] If set to false then the generated help text will not
 ///   output sub tasks. This doesn't stop the sub tasks from being called
 ///   it just doesn't show the sub task list. This is handy for some larger
 ///   projects where the sub tasks add too much noise and may cause confusion
@@ -49,7 +49,10 @@ export 'package:drun/src/global_options.dart';
 Future<void> drun(
   List<String> argv, {
   String dotEnvFilePath = '.env',
-  bool hideSubtasks = false,
+  bool showSubtasks = false,
+  bool logBuffered = false,
+  String logBufferedTpl = logging.bufferedTplDefault,
+  String logPrefixSeperator = logging.prefixSeperatorDefault,
 }) async {
   var exitCode = 0;
   try {
@@ -57,6 +60,12 @@ Future<void> drun(
     if (await File(dotEnvFilePath).exists()) {
       dotenv.load(dotEnvFilePath);
     }
+
+    // Set custom global logging options
+    // This allows someone to do something like: `drun(argv, logBuffered: true)`
+    logging.buffered = logBuffered;
+    logging.bufferedTpl = logBufferedTpl;
+    logging.prefixSeperator = logPrefixSeperator;
 
     // Use reflection to discover the structure of the task runner
     var ms = currentMirrorSystem();
@@ -78,7 +87,7 @@ Future<void> drun(
     GlobalOptions.options = options;
 
     // Finally execute the app
-    await executor(libs, tasks, options, parsedArgv, hideSubtasks);
+    await executor(libs, tasks, options, parsedArgv, showSubtasks);
   } catch (e, st) {
     await writeError(e, st);
     exitCode = 1;
@@ -88,15 +97,135 @@ Future<void> drun(
   }
 }
 
+/// Use this to create a new drun task.
+///
+/// * [computation] Is an annoymous function, async or not, that runs your logic
+///
+/// * [runOnce] A guid or otherwise unique string that is used along with
+///   `AsyncMemoizer` to only run the task one time for a given execution
+///   of drun.
+///
+/// * [runIfNotFound] A list of glob patterns, if any return zero files the
+///   task will execute otherwise it will be a NoOp and return null.
+///
+/// * [runIfChanged] A list of glob patterns, if any files have changed
+///   since the last invocation of drun then the task will execute otherwise
+///   it will be a NoOp and return null. This is OR'ed with [runIfNotFound].
+///
+/// * [runIfChangedMethod] When using [runIfChanged] drun will either compare
+///   files with a modfied timestamp (faster) of using a sha256 checksum
+///   (more accurate).
+///
+/// * [logPrefix] A custom log prefix to use for any messages output with [log].
+///   By default this will use reflection and use the name of task.
+///
+/// * [logPrefixSeperator] The string that is used between [logPrefix] and the
+///   log message.
+///
+/// * [logBuffered] If set to true then all logs for this task will be stored
+///   in memory until the task is complete and then output all at once in a
+///   group with a heading of [logPrefix].
+///
+/// * [logBufferedTpl] If [logBuffered] is true then this mustache template will
+///   be used to output the [logPrefix] as a heading for the group of a buffered
+///   logs. If this is set to an empty string or null then no heading will be
+///   output.
+///
+/// Usage example:
+///
+/// ```dart
+/// Future<void> build() => task<void>(() {
+///   print('building project...');
+/// });
+/// ```
+///
+/// The reason we wrap your task function with this function is to provide a
+/// hook for drun to execute other logic regardless of how your task is called.
+///
+/// Many other task runners have an API like `acmerunner.Run(build)` which is
+/// where they hook into your task. Where as with the drun approach we can
+/// just call `build()` as a normal function from anywhere and not need to
+/// worry about the details of drun.
+Future<T> task<T>(
+  FutureOr<T> Function() computation, {
+  String runOnce,
+  List<String> runIfNotFound,
+  List<String> runIfChanged,
+  ChangedMethod runIfChangedMethod = ChangedMethod.timestamp,
+  String logPrefix,
+  String logPrefixSeperator,
+  bool logBuffered,
+  String logBufferedTpl,
+}) async {
+  // Wrap everything in another function, this allows us to easily apply
+  // the `runOnce` functionality to everything.
+  FutureOr<T> Function() executor = () async {
+    T result;
+
+    // Set some defaults from our global settings
+    logBuffered ??= logging.buffered;
+    logBufferedTpl ??= logging.bufferedTpl;
+    logPrefixSeperator ??= logging.prefixSeperator;
+
+    // This stores the log settings for this task into a global location so
+    // that when the `log()` function is used inside the `computation()` it can
+    // use these settings if nothing has been passed directly to it.
+    var frame = Trace.current().frames[2];
+    var fKey = frameKey(frame);
+    logPrefix ??= frame.member.paramCase;
+    logging.settings[fKey] = logging.Settings(
+      logPrefix,
+      logPrefixSeperator,
+      logBuffered,
+    );
+
+    // Here we run the actual `computation()`, if required.
+    // Depending on the config supplied sometimes we might not need to run the
+    // `computation()` at all and thus return a null result.
+    if ((runIfNotFound?.isEmpty ?? true) && (runIfChanged?.isEmpty ?? true)) {
+      result = await computation();
+    } else {
+      var r = await ifNotFound(computation, runIfNotFound);
+      if (!r.executed) {
+        r = await ifChanged(computation, runIfChanged, runIfChangedMethod);
+      } else {
+        await saveCurrentState(runIfChanged, runIfChangedMethod);
+      }
+      result = r.result;
+    }
+
+    // After running `computation()` output any buffered logs.
+    if (logBuffered) {
+      writeLogs(logPrefix, tpl: logBufferedTpl);
+    }
+
+    // Clean up any global log settings so we don't end up with a leak
+    logging.settings.remove(fKey);
+
+    return result;
+  };
+
+  // Only run the task one time, returning the same result for susequent calls
+  // with-in a single execution of drun.
+  if (runOnce?.isNotEmpty ?? false) {
+    return once(executor, key: runOnce);
+  }
+
+  return executor();
+}
+
 /// A simple logging function that can be used by `Makefile.dart` functions.
 ///
 /// * [message] Is the message you wish to print to console.
 ///
 /// * [prefix] A string that is passed through [logColorize] and prefixed to the
-///   [message]. This is optional, it will default to the name of the function
-///   that called us.
+///   [message]. This is optional, using reflection it will default to the name
+///   of the task that is doing the logging.
 ///
 /// * [seperator] A string that is inserted between [message] and [prefix].
+///
+/// * [buffered] If set to true then all the logs for a given [prefix] will be
+///   stored in memory until they are written by [writeLogs].
 ///
 /// For example:
 ///
@@ -131,20 +260,74 @@ Future<void> drun(
 /// Due to use of [logColorize] `foo` & `bar` in the above output will be
 /// different colors. This allows one to create output similar to tools like
 /// `docker-compose`.
-void log(String message, {String prefix, String seperator = ' | '}) {
-  prefix ??= Trace.current().frames[1].member.paramCase;
+void log(
+  String message, {
+  String prefix,
+  String seperator = logging.prefixSeperatorDefault,
+  bool buffered,
+}) {
+  var frames = Trace.current().frames;
+
+  // Check for any global logging settings, set by `task()`
+  var taskName = frames[1].member.replaceFirst('.<fn>', '');
+  var frame =
+      frames.firstWhere((_) => _.member == taskName, orElse: () => null);
+  if (frame != null) {
+    var k = frameKey(frame);
+    if (logging.settings.containsKey(k)) {
+      var s = logging.settings[k];
+      prefix ??= s.prefix;
+      seperator ??= s.prefixSeperator;
+      buffered ??= s.buffered;
+    }
+  }
+
+  // Default to using the name of the function that called us,
+  // this was the old behaviour so lets keep it for backwards compatibility.
+  prefix ??= frames[1].member.paramCase;
+
+  // Store logs in memory if in buffered mode
+  if (buffered ?? false) {
+    if (!logging.buffers.containsKey(prefix)) {
+      logging.buffers[prefix] = <String>[];
+    }
+    logging.buffers[prefix].add(message);
+    return;
+  }
+
+  // Otherwise output the message as soon as it is logged
   stdout.writeln('${logColorize(prefix)}${seperator}${message}');
 }
 
-// Restrict avaliable colors to 16 bit to ensure best compatibility
-// 256 bit terminal colors are nice but without careful choice of colors I find
-// that more often than not you get output that is hard to read, sometimes it's
-// pretty hard to tell the difference between a darker and lighter color.
-var _allColors = <int>[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-
-// Keep a map of color choices so we don't choose the same, at least until we
-// have choosen all available colors.
-var _prefixToColor = <String, int>{};
+/// Call this to output any buffered logs for a [prefix].
+///
+/// Using this function directly is considered advanced usage,
+/// [task] will automatically call this if needed.
+///
+/// * [prefix] The key that the list of logs are stored under [logBuffers].
+///
+/// * [tpl] This mustache template will be used to output the [prefix] as a
+///   heading for the group of a buffered logs. If this is set to an empty
+///   string or null then no heading will be output.
+void writeLogs(
+  String prefix, {
+  String tpl = logging.bufferedTplDefault,
+}) {
+  if (logging.buffers.containsKey(prefix)) {
+    if (logging.buffers[prefix]?.isNotEmpty ?? false) {
+      if (tpl?.isNotEmpty ?? false) {
+        stdout.write(
+          Template(tpl).renderString({'prefix': prefix}),
+        );
+      }
+      stdout.writeAll(logging.buffers[prefix], '\n');
+      if (tpl?.isNotEmpty ?? false) {
+        stdout.write('\n\n');
+      }
+      logging.buffers.remove(prefix);
+    }
+  }
+}
 
 /// Given a [prefix] this function will return that prefix colored with an
 /// [AnsiPen] choosen by [logPen]. If [message] is provided then the message
@@ -165,16 +348,16 @@ String logColorize(String prefix, {String message}) {
 /// directly use an [AnsiPen] instance. Please refer to either [log] or
 /// [logColorize] for normal usage.
 AnsiPen logPen(String prefix) {
-  if (!_prefixToColor.containsKey(prefix)) {
+  if (!logging.prefixToColor.containsKey(prefix)) {
     var availableColors = <int>[];
-    var choosenColors = _prefixToColor.values;
-    if (choosenColors.length >= _allColors.length) {
+    var choosenColors = logging.prefixToColor.values;
+    if (choosenColors.length >= logging.colors.length) {
       // We reached the maximum number of available colors so
       // we will just have to reuse a color.
-      availableColors = _allColors;
+      availableColors = logging.colors;
     } else {
       // Restrict avaliable color to ones we have not used yet
-      for (var color in _allColors) {
+      for (var color in logging.colors) {
         if (!choosenColors.contains(color)) {
           availableColors.add(color);
         }
@@ -188,272 +371,8 @@ AnsiPen logPen(String prefix) {
     } else {
       choosen = availableColors[Random().nextInt(availableColors.length)];
     }
-    _prefixToColor[prefix] = choosen;
+    logging.prefixToColor[prefix] = choosen;
   }
 
-  return AnsiPen()..xterm(_prefixToColor[prefix]);
-}
-
-/// A shortcut for using [runOnce], [runIfNotFound] & [runIfChanged] altogether.
-Future<T> run<T>(
-  FutureOr<T> Function() computation, {
-  bool once = false,
-  List<String> ifNotFound,
-  List<String> ifChanged,
-}) async {
-  if ((ifNotFound?.isEmpty ?? true) && (ifChanged?.isEmpty ?? true) && !once) {
-    return await computation();
-  }
-
-  if ((ifNotFound?.isEmpty ?? true) && (ifChanged?.isEmpty ?? true) && once) {
-    return runOnce<T>(computation);
-  }
-
-  FutureOr<T> Function() executor = () async {
-    T result;
-
-    var executed = false;
-    if (ifNotFound?.isNotEmpty ?? false) {
-      for (var glob in ifNotFound) {
-        var found = false;
-        try {
-          await for (var _ in Glob(glob).list()) {
-            found = true;
-            break;
-          }
-        } on FileSystemException {
-          found = false;
-        }
-        if (!found) {
-          executed = true;
-          result = await computation();
-        }
-      }
-    }
-
-    if (ifChanged?.isNotEmpty ?? false) {
-      if (executed) {
-        await _saveCurrentState(ifChanged);
-      } else {
-        result = await runIfChanged(computation, ifChanged);
-      }
-    }
-
-    return result;
-  };
-
-  if (once) {
-    var reflected = reflect(computation) as ClosureMirror;
-    return runOnce<T>(
-      executor,
-      key: md5.convert(utf8.encode(reflected.function.source)).toString(),
-    );
-  }
-
-  return await executor();
-}
-
-/// Will only execute [computation] once for a single execution of `drun`.
-/// This is very handy for constructing complex dependant build chains.
-///
-/// For example:
-///
-/// ```dart
-/// import 'package:drun/drun.dart';
-///
-/// Future<void> main(List<String> argv) => drun(argv);
-///
-/// Future<void> foo() => runOnce<void>(() async {
-///   print('foo did some work');
-/// });
-///
-/// Future<void> bar() async {
-///   await foo();
-///   print('bar did some work');
-/// }
-///
-/// Future<void> baz() async {
-///   await foo();
-///   print('baz did some work');
-/// }
-///
-/// Future<void> build() async {
-///   await bar();
-///   await baz();
-/// }
-/// ```
-///
-/// Executing `drun build` will output:
-///
-/// ```
-/// foo did some work
-/// bar did some work
-/// baz did some work
-/// ```
-Future<T> runOnce<T>(FutureOr<T> Function() computation, {String key}) async {
-  /*
-    We have to resort to reflection because in dartlang everytime a closure
-    is created it is seen as different object. This could be resolved by
-    writing something like:
-
-    ```dart
-      var _foo = () async { print('foo did some work'); }
-      Future<void> foo() => runOnce<void>(_foo);
-    ```
-
-    But that is super ugly.
-  */
-  if (key == null) {
-    var reflected = reflect(computation) as ClosureMirror;
-    key = md5.convert(utf8.encode(reflected.function.source)).toString();
-  }
-  if (!_onceTasks.containsKey(key)) {
-    _onceTasks[key] = AsyncMemoizer<T>();
-  }
-  return _onceTasks[key].runOnce(computation);
-}
-
-var _onceTasks = <String, AsyncMemoizer>{};
-
-/// Will only execute [computation] if one of the [globs] doesn't match anything
-///
-/// For example:
-///
-/// ```dart
-/// import 'package:drun/drun.dart';
-///
-/// Future<void> main(List<String> argv) => drun(argv);
-///
-/// Future<void> build() => runIfNotFound<void>(() async {
-///   print('building ./bin/foo');
-/// }, ['./bin/foo']);
-/// ```
-Future<T> runIfNotFound<T>(
-  FutureOr<T> Function() computation,
-  List<String> globs,
-) async {
-  for (var glob in globs) {
-    var found = false;
-    try {
-      await for (var _ in Glob(glob).list()) {
-        found = true;
-        break;
-      }
-    } on FileSystemException {
-      found = false;
-    }
-    if (!found) {
-      return await computation();
-    }
-  }
-  return null;
-}
-
-/// The way in which [runIfChanged] will check if files have changed
-enum ChangedMethod { checksum, timestamp }
-
-/// Will only execute [computation] if one of the [globs] has changed.
-///
-/// You have the option to change [method] to checksum if comparing modified
-/// timestamps is not reliable enough.
-///
-/// For example:
-///
-/// ```dart
-/// import 'package:drun/drun.dart';
-///
-/// Future<void> main(List<String> argv) => drun(argv);
-///
-/// Future<void> build() => runIfChanged<void>(() async {
-///   print('building ./bin/foo');
-/// }, ['./bin/foo']);
-/// ```
-///
-/// You might also like to add `.drun_tool` to your `.gitignore` as this is
-/// where information about the state of the files will be kept.
-Future<T> runIfChanged<T>(
-  FutureOr<T> Function() computation,
-  List<String> globs, {
-  ChangedMethod method = ChangedMethod.timestamp,
-}) async {
-  var currentStateItems = <String, String>{};
-  for (var glob in globs) {
-    await for (var f in Glob(glob).list()) {
-      String value;
-      if (method == ChangedMethod.timestamp) {
-        value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
-      } else {
-        value = await _sha256File(f.path).toString();
-      }
-      currentStateItems[p.canonicalize(f.path)] = value;
-    }
-  }
-
-  var currentStateBuffer = StringBuffer();
-  for (var k in currentStateItems.keys.toList()..sort()) {
-    currentStateBuffer.write(k);
-    currentStateBuffer.write(currentStateItems[k]);
-  }
-
-  var currentState = _sha256String(currentStateBuffer.toString());
-
-  String previousState;
-  var previousStateFile =
-      await File(p.absolute('.drun_tool', 'run-if-changed-state'));
-  if (await previousStateFile.exists()) {
-    previousState = await previousStateFile.readAsString();
-  } else {
-    await previousStateFile.create(recursive: true);
-  }
-
-  if (currentState != previousState) {
-    var result = await computation();
-    await previousStateFile.writeAsString(currentState);
-    return result;
-  }
-
-  return null;
-}
-
-Future<void> _saveCurrentState(
-  List<String> globs, {
-  ChangedMethod method = ChangedMethod.timestamp,
-}) async {
-  var currentStateItems = <String, String>{};
-  for (var glob in globs) {
-    await for (var f in Glob(glob).list()) {
-      String value;
-      if (method == ChangedMethod.timestamp) {
-        value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
-      } else {
-        value = await _sha256File(f.path).toString();
-      }
-      currentStateItems[p.canonicalize(f.path)] = value;
-    }
-  }
-
-  var currentStateBuffer = StringBuffer();
-  for (var k in currentStateItems.keys.toList()..sort()) {
-    currentStateBuffer.write(k);
-    currentStateBuffer.write(currentStateItems[k]);
-  }
-
-  var currentState = _sha256String(currentStateBuffer.toString());
-  await (await File(p.absolute('.drun_tool', 'run-if-changed-state'))
-          .create(recursive: true))
-      .writeAsString(currentState);
-}
-
-String _sha256String(String value) {
-  return sha256.convert(utf8.encode(value)).toString();
-}
-
-Future<Digest> _sha256File(String path) async {
-  var output = AccumulatorSink<Digest>();
-  var input = sha256.startChunkedConversion(output);
-  await for (var chunk in File(path).openRead()) {
-    input.add(chunk);
-  }
-  input.close();
-  return output.events.single;
+  return AnsiPen()..xterm(logging.prefixToColor[prefix]);
 }
