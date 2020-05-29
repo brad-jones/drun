@@ -1,3 +1,16 @@
+# [3.0.0](https://github.com/brad-jones/drun/compare/v2.8.0...v3.0.0) (2020-05-29)
+
+
+### Features
+
+* **taskhelper:** added new way to define tasks with the task() wrapper ([1496cd5](https://github.com/brad-jones/drun/commit/1496cd514ffb7be5d9f90a056c7e50ff73b010aa))
+
+
+### BREAKING CHANGES
+
+* **taskhelper:** runOnce, runIfNotFound, runIfChanged all combined
+into a single wrapping function called task
+
 # [2.8.0](https://github.com/brad-jones/drun/compare/v2.7.0...v2.8.0) (2020-05-20)
 
 
