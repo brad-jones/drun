@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/brad-jones/drun/compare/v3.0.0...v3.0.1) (2020-05-29)
+
+
+### Bug Fixes
+
+* **glob:** windows paths still need to use forward slashes ([3312791](https://github.com/brad-jones/drun/commit/3312791f01997e46673670b0c2ee90f8627f4337))
+
 # [3.0.0](https://github.com/brad-jones/drun/compare/v2.8.0...v3.0.0) (2020-05-29)
 
 
