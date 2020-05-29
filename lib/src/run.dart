@@ -48,7 +48,7 @@ Future<RunResult<T>> ifNotFound<T>(
     for (var glob in globs) {
       var found = false;
       try {
-        await for (var _ in Glob(glob).list()) {
+        await for (var _ in Glob(_fixGlobForWindows(glob)).list()) {
           found = true;
           break;
         }
@@ -71,7 +71,7 @@ Future<RunResult<T>> ifChanged<T>(
   if (globs?.isNotEmpty ?? false) {
     var currentStateItems = <String, String>{};
     for (var glob in globs) {
-      await for (var f in Glob(glob).list()) {
+      await for (var f in Glob(_fixGlobForWindows(glob)).list()) {
         String value;
         if (method == ChangedMethod.timestamp) {
           value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
@@ -112,7 +112,7 @@ Future<void> saveCurrentState(List<String> globs, ChangedMethod method) async {
   if (globs?.isNotEmpty ?? false) {
     var currentStateItems = <String, String>{};
     for (var glob in globs) {
-      await for (var f in Glob(glob).list()) {
+      await for (var f in Glob(_fixGlobForWindows(glob)).list()) {
         String value;
         if (method == ChangedMethod.timestamp) {
           value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
@@ -134,4 +134,8 @@ Future<void> saveCurrentState(List<String> globs, ChangedMethod method) async {
             .create(recursive: true))
         .writeAsString(currentState);
   }
+}
+
+String _fixGlobForWindows(String glob) {
+  return glob.replaceAll('\\', '/');
 }
