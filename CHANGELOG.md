@@ -1,3 +1,10 @@
+## [5.0.3](https://github.com/brad-jones/drun/compare/v5.0.2...v5.0.3) (2020-06-02)
+
+
+### Bug Fixes
+
+* **changed:** forgot to save the state, when it changes ([c72cc6c](https://github.com/brad-jones/drun/commit/c72cc6cdc67fc93f9f7322eb39276ccdffe8fe16))
+
 ## [5.0.2](https://github.com/brad-jones/drun/compare/v5.0.1...v5.0.2) (2020-06-02)
 
 
