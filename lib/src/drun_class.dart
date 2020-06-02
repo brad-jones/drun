@@ -317,7 +317,14 @@ class Drun {
       await previousStateFile.create(recursive: true);
     }
 
-    return currentState != previousState;
+    var result = currentState != previousState;
+    if (result) {
+      await (await File(p.absolute('.drun_tool', 'run-if-changed-state'))
+              .create(recursive: true))
+          .writeAsString(currentState);
+    }
+
+    return result;
   }
 
   /// A synchronous version of [changed].
