@@ -1,3 +1,15 @@
+# [5.0.0](https://github.com/brad-jones/drun/compare/v4.0.1...v5.0.0) (2020-06-02)
+
+
+### Features
+
+* changed how the task and drun class work together ([96f7a7e](https://github.com/brad-jones/drun/commit/96f7a7e6bfc8e15d976e999b45bfde8fc102190c))
+
+
+### BREAKING CHANGES
+
+* significant update again to the API surface.
+
 ## [4.0.1](https://github.com/brad-jones/drun/compare/v4.0.0...v4.0.1) (2020-06-02)
 
 
