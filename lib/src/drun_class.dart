@@ -280,7 +280,7 @@ class Drun {
     for (var glob in globs) {
       var found = false;
       try {
-        await for (var _ in Glob(fixGlobForWindows(glob)).list()) {
+        await for (var _ in Glob(fixGlobForWindows(realpath(glob))).list()) {
           found = true;
           break;
         }
@@ -361,7 +361,7 @@ class Drun {
   ) async {
     var currentStateItems = <String, String>{};
     for (var glob in globs) {
-      await for (var f in Glob(fixGlobForWindows(glob)).list()) {
+      await for (var f in Glob(fixGlobForWindows(realpath(glob))).list()) {
         String value;
         if (method == ChangedMethod.timestamp) {
           value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
