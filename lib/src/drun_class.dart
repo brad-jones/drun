@@ -145,13 +145,15 @@ class Drun {
   }) async {
     ProcessResult r;
 
-    var wd = realpath(workingDirectory);
+    if (workingDirectory != null) {
+      workingDirectory = realpath(workingDirectory);
+    }
 
     if (_logBuffered) {
       r = await dexeca(
         exe,
         args,
-        workingDirectory: wd,
+        workingDirectory: workingDirectory,
         environment: environment,
         inheritStdio: false,
         captureOutput: true,
@@ -167,7 +169,7 @@ class Drun {
         args,
         prefix: _logPrefix,
         prefixSeperator: _logPrefixSeperator,
-        workingDirectory: wd,
+        workingDirectory: workingDirectory,
         environment: environment,
         inheritStdio: true,
         captureOutput: false,
