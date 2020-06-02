@@ -3,19 +3,21 @@ import 'dart:io';
 import 'dart:mirrors';
 
 import 'package:dotenv/dotenv.dart' as dotenv;
+import 'package:drun/src/drun_class.dart';
 import 'package:io/ansi.dart';
 import 'package:path/path.dart' as p;
+import 'package:recase/recase.dart';
+import 'package:stack_trace/stack_trace.dart';
 
 import 'package:drun/src/build_arg_parser.dart';
 import 'package:drun/src/executor.dart';
 import 'package:drun/src/global_options.dart';
 import 'package:drun/src/logging.dart' as logging;
+import 'package:drun/src/reflect.dart';
 
 export 'package:drun/src/annotations.dart';
 export 'package:drun/src/drun_class.dart';
 export 'package:drun/src/global_options.dart';
-export 'package:drun/src/task.dart';
-import 'package:drun/src/reflect.dart';
 
 /// The main entry point for any `Makefile.dart`.
 ///
@@ -108,4 +110,23 @@ Future<void> drun(
     // Ensure we exit with an appropriate exit code.
     exit(exitCode);
   }
+}
+
+/// Use this to create a new drun task.
+///
+/// * [computation] Is an annoymous function, async or not, that runs your logic
+///   This function accepts a single parameter, an instance of [Drun].
+///
+/// Usage example:
+///
+/// ```dart
+/// Future build() => task((drun) {
+///   drun.log('building project...');
+/// });
+/// ```
+Future<T> task<T>(FutureOr<T> Function(Drun) computation) async {
+  var d = Drun(Trace.current().frames[1].member.paramCase);
+  var r = await computation(d);
+  d.writeBufferedLogs();
+  return r;
 }

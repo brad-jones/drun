@@ -1,30 +1,47 @@
+import 'dart:async';
+import 'dart:cli';
 import 'dart:io';
+import 'dart:mirrors';
 
+import 'package:async/async.dart';
 import 'package:dexeca/dexeca.dart';
 import 'package:glob/glob.dart';
 import 'package:mustache_template/mustache_template.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:drun/src/utils.dart';
+import 'package:drun/src/logging.dart' as logging;
 
-/// Each drun [task] has an instance of this class injected.
 class Drun {
   String _logPrefix;
-  bool _logBuffered;
-  String _logBufferedTpl;
-  String _logPrefixSeperator;
+
+  /// A custom log prefix to use for any messages output with [log].
+  /// By default this will use reflection and use the name of the task.
+  String get logPrefix => _logPrefix;
+
+  /// A custom log prefix to use for any messages output with [log].
+  /// By default this will use reflection and use the name of the task.
+  set logPrefix(String v) => _logPrefix = logging.colorize(v);
+
+  /// If set to true then all logs for this task will be stored in memory until
+  /// the task is complete and then output all at once in a group with a heading
+  /// of [logPrefix].
+  bool logBuffered = false;
   final List<String> _logBuffer = <String>[];
 
-  Drun(
-    String logPrefix,
-    bool logBuffered,
-    String logBufferedTpl,
-    String logPrefixSeperator,
-  ) {
-    _logPrefix = logPrefix;
-    _logBuffered = logBuffered;
-    _logBufferedTpl = logBufferedTpl;
-    _logPrefixSeperator = logPrefixSeperator;
+  /// If [logBuffered] is true then this mustache template will be used to
+  /// output the [logPrefix] as a heading for the group of buffered logs.
+  /// If this is set to an empty string or null then no heading will be output.
+  String logBufferedTpl = logging.bufferedTplDefault;
+
+  /// The string that is used between [logPrefix] and the log message.
+  String logPrefixSeperator = logging.prefixSeperatorDefault;
+
+  Drun(String logPrefix) {
+    this.logPrefix = logPrefix;
+    logBuffered = logging.buffered;
+    logBufferedTpl = logging.bufferedTpl;
+    logPrefixSeperator = logging.prefixSeperator;
   }
 
   /// Logs the given [message] to `stdout`.
@@ -40,10 +57,10 @@ class Drun {
   /// });
   /// ```
   void log(String message) {
-    if (_logBuffered) {
+    if (logBuffered) {
       _logBuffer.add(message);
     } else {
-      stdout.writeln('${_logPrefix}${_logPrefixSeperator}${message}');
+      stdout.writeln('${logPrefix}${logPrefixSeperator}${message}');
     }
   }
 
@@ -55,13 +72,13 @@ class Drun {
   /// this is called by [task] if required.
   void writeBufferedLogs() {
     if (_logBuffer.isNotEmpty) {
-      if (_logBufferedTpl?.isNotEmpty ?? false) {
+      if (logBufferedTpl?.isNotEmpty ?? false) {
         stdout.write(
-          Template(_logBufferedTpl).renderString({'prefix': _logPrefix}),
+          Template(logBufferedTpl).renderString({'prefix': logPrefix}),
         );
       }
       stdout.writeAll(_logBuffer, '\n');
-      if (_logBufferedTpl?.isNotEmpty ?? false) {
+      if (logBufferedTpl?.isNotEmpty ?? false) {
         stdout.write('\n\n');
       }
     }
@@ -149,7 +166,7 @@ class Drun {
       workingDirectory = realpath(workingDirectory);
     }
 
-    if (_logBuffered) {
+    if (logBuffered) {
       r = await dexeca(
         exe,
         args,
@@ -167,8 +184,8 @@ class Drun {
       r = await dexeca(
         exe,
         args,
-        prefix: _logPrefix,
-        prefixSeperator: _logPrefixSeperator,
+        prefix: logPrefix,
+        prefixSeperator: logPrefixSeperator,
         workingDirectory: workingDirectory,
         environment: environment,
         inheritStdio: true,
@@ -180,6 +197,198 @@ class Drun {
     }
 
     return r;
+  }
+
+  /// A synchronous version of [run].
+  ProcessResult runSync(
+    String exe,
+    List<String> args, {
+    String workingDirectory,
+    Map<String, String> environment,
+    bool includeParentEnvironment = true,
+    bool runInShell = false,
+    bool winHashBang = true,
+  }) {
+    return waitFor(run(
+      exe,
+      args,
+      workingDirectory: workingDirectory,
+      environment: environment,
+      includeParentEnvironment: includeParentEnvironment,
+      runInShell: runInShell,
+      winHashBang: winHashBang,
+    ));
+  }
+
+  static final _onceTasks = <String, AsyncMemoizer>{};
+
+  /// Given any parameterless function this will only ever execute it once.
+  /// On subsequent executions that first result is returned.
+  ///
+  /// Every time an annoymous function is created in dart lang it is
+  /// considered unique from all other instances of the same function.
+  /// Consider the following example:
+  ///
+  /// ```dart
+  /// Future foo() => task((drun) => drun.runOnce(() => print('hello')));
+  ///
+  /// Future bar() => task((drun) async {
+  ///   await foo();
+  ///   await foo();
+  ///   await foo();
+  /// });
+  /// ```
+  ///
+  /// Executing `drun bar` would print `hello` 3 times. However this example:
+  ///
+  /// ```dart
+  /// var x = () => print('hello');
+  ///
+  /// Future foo() => task((drun) => drun.runOnce(x));
+  ///
+  /// Future bar() => task((drun) async {
+  ///   await foo();
+  ///   await foo();
+  ///   await foo();
+  /// });
+  /// ```
+  ///
+  /// Only prints `hello` once. To make life easier for most cases we use
+  /// reflection to get the source code of the [computation] and create a hash
+  /// to use for comparision purposes.
+  ///
+  /// This works for many cases however sometimes you might have 2 functions
+  /// with the exact same source code, but perhaps are differentiated by
+  /// constants or other variables.
+  ///
+  /// If that is the case you can specify your own unique [key] such as a UUID.
+  Future<T> runOnce<T>(FutureOr<T> Function() computation, {String key}) async {
+    if (key == null) {
+      var reflected = reflect(computation) as ClosureMirror;
+      key = md5String(reflected.function.source);
+    }
+    if (!_onceTasks.containsKey(key)) {
+      _onceTasks[key] = AsyncMemoizer<T>();
+    }
+    return _onceTasks[key].runOnce(computation);
+  }
+
+  /// This function will return `false` the moment a glob pattern does not
+  /// return any valid results. If all glob patterns return at least a single
+  /// valid path then this function will return `true`.
+  Future<bool> exists(List<String> globs) async {
+    for (var glob in globs) {
+      var found = false;
+      try {
+        await for (var _ in Glob(fixGlobForWindows(glob)).list()) {
+          found = true;
+          break;
+        }
+      } on FileSystemException {
+        found = false;
+      }
+      if (!found) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// A synchronous version of [exists].
+  bool existsSync(List<String> globs) {
+    return waitFor(exists(globs));
+  }
+
+  /// This function will return `true` if any files found with [globs] have
+  /// changed since the last execution of this method, otherwise `false`
+  /// will be returned.
+  Future<bool> changed(
+    List<String> globs, {
+    ChangedMethod method = ChangedMethod.timestamp,
+  }) async {
+    var currentState = await _getCurrentState(globs, method);
+
+    String previousState;
+    var previousStateFile =
+        await File(p.absolute('.drun_tool', 'run-if-changed-state'));
+    if (await previousStateFile.exists()) {
+      previousState = await previousStateFile.readAsString();
+    } else {
+      await previousStateFile.create(recursive: true);
+    }
+
+    return currentState != previousState;
+  }
+
+  /// A synchronous version of [changed].
+  bool changedSync(
+    List<String> globs, {
+    ChangedMethod method = ChangedMethod.timestamp,
+  }) {
+    return waitFor(changed(globs, method: method));
+  }
+
+  /// This method combines both [exists] & [changed] into a single call.
+  ///
+  /// If [existGlobs] returns no matches then this function will save the
+  /// current state of the [changedGlobs] and return `true`.
+  ///
+  /// Otherwise [changed] is called and the result returned.
+  Future<bool> notFoundOrChanged(
+    List<String> existGlobs,
+    List<String> changedGlobs, {
+    ChangedMethod method = ChangedMethod.timestamp,
+  }) async {
+    if (!await exists(existGlobs)) {
+      await _saveCurrentState(changedGlobs, method);
+      return true;
+    }
+    return await changed(changedGlobs, method: method);
+  }
+
+  /// A synchronous version of [notFoundOrChangedSync].
+  bool notFoundOrChangedSync(
+    List<String> existGlobs,
+    List<String> changedGlobs, {
+    ChangedMethod method = ChangedMethod.timestamp,
+  }) {
+    return waitFor(notFoundOrChanged(existGlobs, changedGlobs, method: method));
+  }
+
+  Future<String> _getCurrentState(
+    List<String> globs,
+    ChangedMethod method,
+  ) async {
+    var currentStateItems = <String, String>{};
+    for (var glob in globs) {
+      await for (var f in Glob(fixGlobForWindows(glob)).list()) {
+        String value;
+        if (method == ChangedMethod.timestamp) {
+          value = (await f.stat()).modified.microsecondsSinceEpoch.toString();
+        } else {
+          value = await sha256File(f.path).toString();
+        }
+        currentStateItems[p.canonicalize(f.path)] = value;
+      }
+    }
+
+    var currentStateBuffer = StringBuffer();
+    for (var k in currentStateItems.keys.toList()..sort()) {
+      currentStateBuffer.write(k);
+      currentStateBuffer.write(currentStateItems[k]);
+    }
+
+    return sha256String(currentStateBuffer.toString());
+  }
+
+  Future<void> _saveCurrentState(
+    List<String> globs,
+    ChangedMethod method,
+  ) async {
+    var currentState = await _getCurrentState(globs, method);
+    await (await File(p.absolute('.drun_tool', 'run-if-changed-state'))
+            .create(recursive: true))
+        .writeAsString(currentState);
   }
 
   /// Copies [source] to [destination] regardless if a single file
@@ -328,3 +537,8 @@ class Drun {
     }
   }
 }
+
+/// When using [changed] this functionality will default to using the
+/// files [timestamp] for comparison or you can use a [checksum] which
+/// will be more accurate but slower.
+enum ChangedMethod { checksum, timestamp }

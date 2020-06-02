@@ -137,50 +137,63 @@ Future myTaskThatLogs() => task((drun) => Future.wait([
     ]));
 Future myTaskThatLogsFoo() => task((drun) => drun.log('i did some work'));
 Future myTaskThatLogsBar() => task((drun) => drun.log('i did some work'));
-Future myTaskThatLogsBaz() => task(
-      (drun) => drun.log('i did some work'),
-      logPrefix: 'custom-prefix',
-    );
+Future myTaskThatLogsBaz() => task((drun) {
+      drun.logPrefix = 'custom-prefix';
+      drun.log('i did some work');
+    });
 
 /// An example of running the same task many times but only having it truly
-/// execute once. This is very hand for constructing complex build graphs/chains
+/// execute once. This is very handy for constructing complex build chains
 /// where multiple tasks may all depend on a common task.
 Future myTaskThatRunsOnceExample() => task((drun) => Future.wait([
       myTaskThatRunsOnce(),
       myTaskThatRunsOnce(),
       myTaskThatRunsOnce(),
     ]));
-Future myTaskThatRunsOnce() => task(
-      (drun) {
-        print('you should only see me printed one time');
-      },
-      runOnce: '9b5f1470-4ced-461a-b9d0-505dd44f91cc',
-    );
+Future myTaskThatRunsOnce() => task((drun) => drun.runOnce(
+      () => print('you should only see me printed one time'),
+      key: 'a2a2996e-6540-4a45-90d5-5a8c7cc06b87',
+    ));
 
-/// Example of using the `runIfNotFound` functionality.
+/// Example of using the `exists` functionality.
 ///
 /// This is handy for ensuring tasks that generate artifacts only run when the
 /// artifact doesn't already exist.
-Future<void> myTaskThatRunsIfNotFound() => task(
-      (drun) async {
+Future<void> myTaskThatRunsIfNotFound() => task((drun) async {
+      if (!await drun.exists(['./bin/**/foo'])) {
         print('You should only see me if the '
             'file `./bin/baz/foo` does not exist');
         await File('./bin/baz/foo').create(recursive: true);
-      },
-      runIfNotFound: ['./bin/**/foo'],
-    );
+      }
+    });
 
-/// Example of using the `runIfChanged` functionality.
+/// Example of using the `changed` functionality.
 ///
 /// This is handy for ensuring tasks that generate artifacts from source files
 /// only run when those source files have changed since the last execution.
-///
-/// Using this with [runIfNotFound] is very useful. The 2 conditions are OR'ed.
-Future<void> myTaskThatRunsIfChanged() => task(
-      (drun) async {
+Future<void> myTaskThatRunsIfChanged() => task((drun) async {
+      if (await drun.changed(['./Makefile.dart'])) {
         print('You should only see me if this '
             'file has changed since the last time this task was run.\n'
             'Perhaps just edit this message to test this out :)');
-      },
-      runIfChanged: ['./Makefile.dart'],
-    );
+      }
+    });
+
+/// Example of using the `notFoundOrChanged` functionality.
+///
+/// It's fairly common to want to combine both [exists] and [changed] so here
+/// is an example that does just that.
+Future<void> myTaskThatRunsIfNotFoundOrChanged() => task((drun) async {
+      if (await drun.notFoundOrChanged(
+        ['./bin/**/foo'],
+        ['./Makefile.dart'],
+      )) {
+        print('You should only see me if the '
+            'file `./bin/baz/foo` does not exist');
+        print('OR');
+        print('You should only see me if this '
+            'file has changed since the last time this task was run.\n'
+            'Perhaps just edit this message to test this out :)');
+        await File('./bin/baz/foo').create(recursive: true);
+      }
+    });
