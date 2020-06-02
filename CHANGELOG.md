@@ -1,3 +1,15 @@
+# [4.0.0](https://github.com/brad-jones/drun/compare/v3.0.1...v4.0.0) (2020-06-02)
+
+
+### Features
+
+* added new drun class that in injected into task functions ([b544773](https://github.com/brad-jones/drun/commit/b544773b388c9d36e4f6d4f70458b487648d147d))
+
+
+### BREAKING CHANGES
+
+* added new Drun class and changed the way logging is done
+
 ## [3.0.1](https://github.com/brad-jones/drun/compare/v3.0.0...v3.0.1) (2020-05-29)
 
 
