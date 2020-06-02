@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/brad-jones/drun/compare/v4.0.0...v4.0.1) (2020-06-02)
+
+
+### Bug Fixes
+
+* **run:** working directory bug ([24ac433](https://github.com/brad-jones/drun/commit/24ac4338370c15b54caee945255e06264157a6d8))
+
 # [4.0.0](https://github.com/brad-jones/drun/compare/v3.0.1...v4.0.0) (2020-06-02)
 
 
