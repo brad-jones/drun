@@ -1,1 +1,0 @@
-enum ChangedMethod { checksum, timestamp }

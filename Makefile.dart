@@ -1,12 +1,13 @@
 #!/usr/bin/env -S pub run drun
-import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
-import 'package:drun/drun.dart';
+import 'dart:io';
+
+import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dexeca/dexeca.dart';
+import 'package:drun/drun.dart';
 import 'package:path/path.dart' as p;
-import 'package:archive/archive_io.dart';
 import 'package:pretty_json/pretty_json.dart';
 
 /// TIP: Bootstrap this with `pub run drun`

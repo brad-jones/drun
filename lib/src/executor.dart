@@ -1,15 +1,20 @@
 import 'dart:io';
 import 'dart:mirrors';
+
 import 'package:args/args.dart';
-import 'package:recase/recase.dart';
-import 'package:drun/src/write_help.dart';
-import 'package:drun/src/annotations.dart';
-import 'package:drun/src/type_parser.dart';
 import 'package:dotenv/dotenv.dart' as dotenv;
+import 'package:recase/recase.dart';
+
+import 'package:drun/src/annotations.dart';
 import 'package:drun/src/logging.dart' as logging;
+import 'package:drun/src/reflect.dart';
+import 'package:drun/src/write_help.dart';
 
 const _version = '0.0.0-semantically-released';
 
+/// This function is called after the [ArgParser] has been built and has been
+/// run, parsing the CLI arguments into [ArgResults]. This is what actually
+/// invokes your task.
 Future<void> executor(
   Map<Uri, LibraryMirror> libs,
   Map<String, MethodMirror> tasks,

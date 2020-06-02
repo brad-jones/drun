@@ -3,6 +3,10 @@ import 'package:args/args.dart';
 import 'package:recase/recase.dart';
 import 'package:drun/src/annotations.dart';
 
+/// This function takes the reflected [tasks] and [options] and uses that
+/// metadata to build a new instance of an [ArgParser].
+///
+/// see: https://pub.dev/packages/args
 ArgParser buildArgParser(
   Map<String, MethodMirror> tasks,
   Map<String, MethodMirror> options,

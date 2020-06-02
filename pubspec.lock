@@ -112,7 +112,7 @@ packages:
       name: dexeca
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.2.1"
+    version: "1.3.0"
   dexecve:
     dependency: "direct main"
     description:

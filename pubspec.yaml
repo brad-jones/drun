@@ -17,7 +17,7 @@ dependencies:
   console: ^3.1.0
   convert: ^2.1.1
   crypto: ^2.1.4
-  dexeca: ^1.0.1
+  dexeca: ^1.3.0
   dexecve: ^1.1.0
   dotenv: ^2.0.0
   glob: ^1.2.0

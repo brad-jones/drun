@@ -1,7 +1,8 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'dart:io';
+
 import 'package:convert/convert.dart';
+import 'package:crypto/crypto.dart';
 
 String sha256String(String value) {
   return sha256.convert(utf8.encode(value)).toString();
@@ -15,4 +16,8 @@ Future<Digest> sha256File(String path) async {
   }
   input.close();
   return output.events.single;
+}
+
+String fixGlobForWindows(String glob) {
+  return glob.replaceAll('\\', '/');
 }
