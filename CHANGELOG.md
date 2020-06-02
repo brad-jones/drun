@@ -1,3 +1,10 @@
+## [5.0.1](https://github.com/brad-jones/drun/compare/v5.0.0...v5.0.1) (2020-06-02)
+
+
+### Bug Fixes
+
+* **glob:** make sure we use realpath ([ff8a16d](https://github.com/brad-jones/drun/commit/ff8a16d27618cad944a7e7505cda570219d2a95f))
+
 # [5.0.0](https://github.com/brad-jones/drun/compare/v4.0.1...v5.0.0) (2020-06-02)
 
 
