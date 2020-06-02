@@ -116,13 +116,13 @@ class Drun {
   /// provide your very own [rootFinder] function.
   String realpath(String path, {String Function() rootFinder}) {
     if (!p.isAbsolute(path)) {
-      if (path.startsWith('~')) {
+      if (path.startsWith('~/')) {
         path = p.join(
           Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'],
-          path.substring(1),
+          path.substring(2),
         );
-      } else if (path.startsWith('!')) {
-        path = p.join(_repoRoot(rootFinder), path.substring(1));
+      } else if (path.startsWith('!/')) {
+        path = p.join(_repoRoot(rootFinder), path.substring(2));
       }
     }
     return p.canonicalize(path);
