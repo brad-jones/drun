@@ -39,6 +39,16 @@ mixin NotFoundOrChanged on Realpath {
     return waitFor(exists(globs));
   }
 
+  File _stateFileName(List<String> globs, ChangedMethod method) {
+    var hash = md5String('${globs.join()}${method.toString()}');
+    return File(p.join(
+      Directory.systemTemp.path,
+      'drun-1501de6e-58c9-4f86-b61c-cd310195c861',
+      'run-if-changed-state',
+      '${hash}',
+    ));
+  }
+
   /// This function will return `true` if any files found with [globs] have
   /// changed since the last execution of this method, otherwise `false`
   /// will be returned.
@@ -46,21 +56,19 @@ mixin NotFoundOrChanged on Realpath {
     List<String> globs, {
     ChangedMethod method = ChangedMethod.timestamp,
   }) async {
+    var stateFile = _stateFileName(globs, method);
     var currentState = await _getCurrentState(globs, method);
 
     String previousState;
-    var previousStateFile =
-        await File(p.absolute('.drun_tool', 'run-if-changed-state'));
-    if (await previousStateFile.exists()) {
-      previousState = await previousStateFile.readAsString();
+    if (await stateFile.exists()) {
+      previousState = await stateFile.readAsString();
     } else {
-      await previousStateFile.create(recursive: true);
+      await stateFile.create(recursive: true);
     }
 
     var result = currentState != previousState;
     if (result) {
-      await (await File(p.absolute('.drun_tool', 'run-if-changed-state'))
-              .create(recursive: true))
+      await (await stateFile.create(recursive: true))
           .writeAsString(currentState);
     }
 
@@ -132,9 +140,8 @@ mixin NotFoundOrChanged on Realpath {
     List<String> globs,
     ChangedMethod method,
   ) async {
+    var stateFile = _stateFileName(globs, method);
     var currentState = await _getCurrentState(globs, method);
-    await (await File(p.absolute('.drun_tool', 'run-if-changed-state'))
-            .create(recursive: true))
-        .writeAsString(currentState);
+    await (await stateFile.create(recursive: true)).writeAsString(currentState);
   }
 }
