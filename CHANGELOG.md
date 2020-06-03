@@ -1,3 +1,10 @@
+## [6.1.1](https://github.com/brad-jones/drun/compare/v6.1.0...v6.1.1) (2020-06-03)
+
+
+### Bug Fixes
+
+* **changed:** the state file was not unique per set of function args ([cdf4d7b](https://github.com/brad-jones/drun/commit/cdf4d7b2e35c79cb52c442613bbd9dc0a135c1bd))
+
 # [6.1.0](https://github.com/brad-jones/drun/compare/v6.0.0...v6.1.0) (2020-06-03)
 
 
