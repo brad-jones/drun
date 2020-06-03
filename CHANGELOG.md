@@ -1,3 +1,10 @@
+## [6.1.2](https://github.com/brad-jones/drun/compare/v6.1.1...v6.1.2) (2020-06-03)
+
+
+### Bug Fixes
+
+* **deps:** use eagerError true which is what I expected initally ([ededa55](https://github.com/brad-jones/drun/commit/ededa55ea08b632ef3b7059fe01a89e508c8589b))
+
 ## [6.1.1](https://github.com/brad-jones/drun/compare/v6.1.0...v6.1.1) (2020-06-03)
 
 
