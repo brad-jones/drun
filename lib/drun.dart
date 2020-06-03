@@ -3,20 +3,20 @@ import 'dart:io';
 import 'dart:mirrors';
 
 import 'package:dotenv/dotenv.dart' as dotenv;
-import 'package:drun/src/drun_class.dart';
 import 'package:io/ansi.dart';
 import 'package:path/path.dart' as p;
 import 'package:recase/recase.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 import 'package:drun/src/build_arg_parser.dart';
+import 'package:drun/src/dsl/drun.dart';
+import 'package:drun/src/dsl/logging.dart';
 import 'package:drun/src/executor.dart';
 import 'package:drun/src/global_options.dart';
-import 'package:drun/src/logging.dart' as logging;
-import 'package:drun/src/reflect.dart';
+import 'package:drun/src/utils.dart';
 
 export 'package:drun/src/annotations.dart';
-export 'package:drun/src/drun_class.dart';
+export 'package:drun/src/dsl/drun.dart';
 export 'package:drun/src/global_options.dart';
 
 /// The main entry point for any `Makefile.dart`.
@@ -49,8 +49,8 @@ Future<void> drun(
   String dotEnvFilePath = '.env',
   bool showSubtasks = false,
   bool logBuffered = false,
-  String logBufferedTpl = logging.bufferedTplDefault,
-  String logPrefixSeperator = logging.prefixSeperatorDefault,
+  String logBufferedTpl,
+  String logPrefixSeperator,
 }) async {
   // Exit codes are very important as they are usally used in CI/CD pipelines
   // that rely on programs to communicate their exit status correctly in order
@@ -66,9 +66,10 @@ Future<void> drun(
 
     // Set custom global logging options
     // This allows someone to do something like: `drun(argv, logBuffered: true)`
-    logging.buffered = logBuffered;
-    logging.bufferedTpl = logBufferedTpl;
-    logging.prefixSeperator = logPrefixSeperator;
+    Logging.buffered = logBuffered;
+    if (logBufferedTpl != null) Logging.bufferedTpl = logBufferedTpl;
+    if (logPrefixSeperator != null)
+      Logging.prefixSeperator = logPrefixSeperator;
 
     // Use reflection to discover the structure of the task runner
     var ms = currentMirrorSystem();

@@ -63,16 +63,23 @@ scoop install drun;
 
 ## Usage
 
+_pubspec.yaml_
+
+```yaml
+name: my_project
+
+dependencies:
+  # You should probably fix the version of drun but leaving it blank will
+  # download the latest version and get you started.
+  drun:
+```
+
 _Makefile.dart_
 
 ```dart
 import 'package:drun/drun.dart';
-
-Future<void> main(argv) async => drun(argv);
-
-void myTask() {
-  print('Mello World');
-}
+Future main(argv) async => drun(argv);
+Future myTask() => task((drun) => drun.log('Hello World'));
 ```
 
 Execute with `drun my-task`

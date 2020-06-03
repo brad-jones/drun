@@ -1,18 +1,26 @@
 import 'dart:io';
 import 'package:drun/drun.dart';
 
-// Global options can be defined in another file or inline anywhere in your makefile
+// Global options can be defined in another file or inlined anywhere in your
+// makefile. Open up this file for more details about Global Options...
 import './Makefile.opts.dart';
 
-// Other makefiles can be imported and their tasks will be prefixed with the import prefix.
+// Utils are functions / extension methods that are common across all
+// makefiles / tasks. Open up this file for more details about Utils...
+import './Makefile.utils.dart';
+
+// Other makefiles can be imported and their tasks will be prefixed with the
+// import prefix. Sub tasks like these can be used by tasks inside this Makefile
+// and they can also be called directly by the end user so long as they use the
+// correct prefix. By default sub tasks are not output in generated help text.
+// Use `--help --show-subtasks` together to see all subtasks.
 import './projects/foo/Makefile.dart' as foo;
 import './projects/bar/Makefile.dart' as bar;
 
 /// Start off by redirecting your main method to the drun method
 Future<void> main(List<String> argv) => drun(argv);
 
-/// Then just create functions that can be called via the command line
-/// call me like: `drun my-task`
+/// Then just create functions and execute them like: `drun my-task`
 ///
 /// HINT: docblocks are used to generate help text on the command line.
 /// try `drun my-task --help`
@@ -20,9 +28,8 @@ void myTask() {
   print('Mello World');
 }
 
-/// Both sync and async functions are supported
-/// call me like: `drun my-async-task`
-Future<void> myAsyncTask() async {
+/// Both sync and async functions are supported.
+Future<void> myTaskAsync() async {
   await Future.delayed(Duration(seconds: 3));
   print('Mello World');
 }
@@ -121,9 +128,12 @@ void myTaskWithGlobalOptions() {
 /// Drun provides additional functionality through the [task] wrapper.
 /// It is totally optional if you use this, the next few examples show
 /// off what is possible.
-Future<void> myTaskThatUsesTaskHelper() => task((drun) {
+Future myTaskThatUsesTaskHelper() => task((drun) {
       drun.log('Hello');
     });
+
+/// An example of how to use an extension method defined in `./Makefile.utils.dart`
+Future myTaskThatCallsAUtil() => task((drun) => drun.sayHello());
 
 /// An example of using drun's logging, by default all log messages output from
 /// a task are prefixed with the task's name. This results in output similar to
@@ -150,10 +160,23 @@ Future myTaskThatRunsOnceExample() => task((drun) => Future.wait([
       myTaskThatRunsOnce(),
       myTaskThatRunsOnce(),
     ]));
-Future myTaskThatRunsOnce() => task((drun) => drun.runOnce(
+Future myTaskThatRunsOnce() => task((drun) => drun.once(
       () => print('you should only see me printed one time'),
-      key: 'a2a2996e-6540-4a45-90d5-5a8c7cc06b87',
     ));
+
+/// Example of using `exe` which is a wrapper around the `dexeca` project.
+///
+/// While you can of course use native dart code to do things, more often than
+/// you will probably shell out to other processes in order to do your work.
+///
+/// The `drun.exe` & `drun.exeSync` methods help you do this easily.
+/// Of course if your require lower level control feel free to use the
+/// `dexeca` function directly.
+///
+/// see: <https://pub.dev/packages/dexeca>
+Future<void> myTaskThatRunsAChildProc() => task(
+      (drun) => drun.exe('ping', drun.pingArgs('1.1.1.1')),
+    );
 
 /// Example of using the `exists` functionality.
 ///
@@ -197,3 +220,8 @@ Future<void> myTaskThatRunsIfNotFoundOrChanged() => task((drun) async {
         await File('./bin/baz/foo').create(recursive: true);
       }
     });
+
+// TODO: copy
+// TODO: del
+// TODO: realpath
+// TODO: searchReplace

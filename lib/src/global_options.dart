@@ -5,7 +5,7 @@ import 'package:recase/recase.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 import 'package:drun/src/annotations.dart';
-import 'package:drun/src/reflect.dart';
+import 'package:drun/src/utils.dart';
 
 /// You may extend this class and populate with static getters for CLI options
 /// that are global to your task runner.

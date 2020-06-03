@@ -6,8 +6,8 @@ import 'package:dotenv/dotenv.dart' as dotenv;
 import 'package:recase/recase.dart';
 
 import 'package:drun/src/annotations.dart';
-import 'package:drun/src/logging.dart' as logging;
-import 'package:drun/src/reflect.dart';
+import 'package:drun/src/dsl/logging.dart';
+import 'package:drun/src/utils.dart';
 import 'package:drun/src/write_help.dart';
 
 const _version = '0.0.0-semantically-released';
@@ -51,15 +51,15 @@ Future<void> executor(
 
   if (parsedArgv.wasParsed('log-buffered') ||
       Platform.environment.containsKey('DRUN_LOG_BUFFERED')) {
-    logging.buffered = true;
+    Logging.buffered = true;
   }
 
   if (Platform.environment.containsKey('DRUN_LOG_BUFFERED_TPL')) {
-    logging.bufferedTpl = Platform.environment['DRUN_LOG_BUFFERED_TPL'];
+    Logging.bufferedTpl = Platform.environment['DRUN_LOG_BUFFERED_TPL'];
   }
 
   if (Platform.environment.containsKey('DRUN_LOG_PREFIX_SEPERATOR')) {
-    logging.prefixSeperator = Platform.environment['DRUN_LOG_PREFIX_SEPERATOR'];
+    Logging.prefixSeperator = Platform.environment['DRUN_LOG_PREFIX_SEPERATOR'];
   }
 
   var taskParameterValues = task.parameters.map((p) {
