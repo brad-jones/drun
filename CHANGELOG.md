@@ -1,3 +1,17 @@
+# [6.0.0](https://github.com/brad-jones/drun/compare/v5.0.3...v6.0.0) (2020-06-03)
+
+
+### Features
+
+* **dsl:** we now have a scalable way of building a dsl of sorts ([e8072be](https://github.com/brad-jones/drun/commit/e8072be61c9b5209be44e1ebc0cea60e49294edc))
+
+
+### BREAKING CHANGES
+
+* **dsl:** again without tests it's hard to say if anything has broken but
+in theory it shouldn't. Regardless it's such a large change that bumping the major
+version is warrented.
+
 ## [5.0.3](https://github.com/brad-jones/drun/compare/v5.0.2...v5.0.3) (2020-06-02)
 
 
