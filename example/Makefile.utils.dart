@@ -13,10 +13,6 @@ import 'package:drun/drun.dart';
 /// The advantage of creating extension methods is that your utilties can take
 /// advantage of druns logging and other existing functionality.
 extension Utils on Drun {
-  void sayHello() {
-    log('hello');
-  }
-
   List<String> pingArgs(String target) {
     if (Platform.isWindows) {
       return [target];

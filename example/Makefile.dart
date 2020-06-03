@@ -122,7 +122,7 @@ void myTaskWithGlobalOptions() {
   print(Options.foobar);
 }
 
-/// Runs a task using the drun task() helper function
+/// Runs a task using the drun [task] helper function
 ///
 /// Up until now all tasks have been plain dart functions.
 /// Drun provides additional functionality through the [task] wrapper.
@@ -132,15 +132,33 @@ Future myTaskThatUsesTaskHelper() => task((drun) {
       drun.log('Hello');
     });
 
-/// An example of how to use an extension method defined in `./Makefile.utils.dart`
-Future myTaskThatCallsAUtil() => task((drun) => drun.sayHello());
+/// Example of using `deps`.
+///
+/// Alternativly this example could easily be re-written as:
+///
+/// ```dart
+/// Future myTaskThatDependsOnAnother() => task((drun) async {
+///   await drun.deps([_aPrivateTask()]);
+///   drun.log('doing more work');
+/// });
+/// ```
+Future myTaskThatDependsOnAnother() => task((drun) =>
+    drun.deps([_aPrivateTask()]).then((_) => drun.log('doing more work')));
+
+/// Oh and if you do use the [task] wrapper, you can define private tasks like
+/// this one. These are not callable via the CLI nor will they show up in any
+/// help text.
+///
+/// This pattern is most handy when you want to have a distinct log prefix
+/// with-in a single "callable" task.
+Future _aPrivateTask() => task((drun) => drun.log('doing work'));
 
 /// An example of using drun's logging, by default all log messages output from
 /// a task are prefixed with the task's name. This results in output similar to
 /// tools like `docker-compose` when many tasks are running concurrently.
 ///
 /// HINT: try running this task with `--log-buffered` to see the alternative
-Future myTaskThatLogs() => task((drun) => Future.wait([
+Future myTaskThatLogs() => task((drun) => drun.deps([
       myTaskThatLogsFoo(),
       myTaskThatLogsBar(),
       myTaskThatLogsBaz(),
@@ -155,14 +173,13 @@ Future myTaskThatLogsBaz() => task((drun) {
 /// An example of running the same task many times but only having it truly
 /// execute once. This is very handy for constructing complex build chains
 /// where multiple tasks may all depend on a common task.
-Future myTaskThatRunsOnceExample() => task((drun) => Future.wait([
+Future myTaskThatRunsOnceExample() => task((drun) => drun.deps([
       myTaskThatRunsOnce(),
       myTaskThatRunsOnce(),
       myTaskThatRunsOnce(),
     ]));
-Future myTaskThatRunsOnce() => task((drun) => drun.once(
-      () => print('you should only see me printed one time'),
-    ));
+Future myTaskThatRunsOnce() => task((drun) =>
+    drun.once(() => drun.log('you should only see me printed one time')));
 
 /// Example of using `exe` which is a wrapper around the `dexeca` project.
 ///
@@ -174,9 +191,8 @@ Future myTaskThatRunsOnce() => task((drun) => drun.once(
 /// `dexeca` function directly.
 ///
 /// see: <https://pub.dev/packages/dexeca>
-Future<void> myTaskThatRunsAChildProc() => task(
-      (drun) => drun.exe('ping', drun.pingArgs('1.1.1.1')),
-    );
+Future<void> myTaskThatRunsAChildProc() =>
+    task((drun) => drun.exe('ping', drun.pingArgs('1.1.1.1')));
 
 /// Example of using the `exists` functionality.
 ///
