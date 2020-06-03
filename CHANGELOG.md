@@ -1,3 +1,10 @@
+# [6.1.0](https://github.com/brad-jones/drun/compare/v6.0.0...v6.1.0) (2020-06-03)
+
+
+### Features
+
+* **deps:** added new deps dsl method ([c6b7d4c](https://github.com/brad-jones/drun/commit/c6b7d4cf9628a07d78a8aa692dfa71e9e5ebbb5d))
+
 # [6.0.0](https://github.com/brad-jones/drun/compare/v5.0.3...v6.0.0) (2020-06-03)
 
 
