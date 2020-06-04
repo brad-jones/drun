@@ -4,6 +4,4 @@ import 'package:drun/drun.dart';
 Future<void> main(List<String> argv) => drun(argv);
 
 /// Builds the foo project
-void build() {
-  print('building project foo');
-}
+Future build() => task((drun) => drun.log('building project foo'));

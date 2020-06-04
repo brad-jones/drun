@@ -66,32 +66,46 @@ Map<String, LibraryMirror> reflectDeps(LibraryMirror makeFile, String prefix) {
   return deps;
 }
 
+Map<String, MethodMirror> _tasks;
 Map<String, MethodMirror> reflectTasks(
   Map<Uri, LibraryMirror> libs,
   Map<String, LibraryMirror> deps,
 ) {
-  var tasks = <String, MethodMirror>{};
+  if (_tasks == null) {
+    _tasks = <String, MethodMirror>{};
 
-  for (var e in libs.entries) {
-    if (e.key.path.endsWith('Makefile.dart')) {
-      for (var task in e.value.declarations.values
-          .whereType<MethodMirror>()
-          .where((v) => v.simpleName != Symbol('main') && !v.isPrivate)) {
-        var prefix = deps.entries
-            .firstWhere(
-                (_) =>
-                    _.value.location.sourceUri ==
-                    (task.owner as LibraryMirror).uri,
-                orElse: () => null)
-            .key;
+    for (var e in libs.entries) {
+      if (e.key.path.endsWith('Makefile.dart')) {
+        for (var task in e.value.declarations.values
+            .whereType<MethodMirror>()
+            .where((v) => v.simpleName != Symbol('main') && !v.isPrivate)) {
+          var prefix = deps.entries
+              .firstWhere(
+                  (_) =>
+                      _.value.location.sourceUri ==
+                      (task.owner as LibraryMirror).uri,
+                  orElse: () => null)
+              .key;
 
-        tasks['${prefix}${prefix == '' ? '' : ':'}${MirrorSystem.getName(task.simpleName).paramCase}'] =
-            task;
+          _tasks['${prefix}${prefix == '' ? '' : ':'}${MirrorSystem.getName(task.simpleName).paramCase}'] =
+              task;
+        }
       }
     }
   }
 
-  return tasks;
+  return _tasks;
+}
+
+MapEntry<String, MethodMirror> reflectTask(Frame frame) {
+  for (var e in _tasks.entries) {
+    if (MirrorSystem.getName(e.value.simpleName) == frame.member) {
+      if ((e.value.owner as LibraryMirror).uri == frame.uri) {
+        return e;
+      }
+    }
+  }
+  return null;
 }
 
 Map<String, MethodMirror> reflectOptions(Map<Uri, LibraryMirror> libs) {

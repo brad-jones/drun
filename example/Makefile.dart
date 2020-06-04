@@ -172,10 +172,9 @@ Future myTaskThatLogs() => task((drun) => drun.deps([
     ]));
 Future myTaskThatLogsFoo() => task((drun) => drun.log('i did some work'));
 Future myTaskThatLogsBar() => task((drun) => drun.log('i did some work'));
-Future myTaskThatLogsBaz() => task((drun) {
-      drun.logPrefix = 'custom-prefix';
-      drun.log('i did some work');
-    });
+
+@LogPrefix('custom-prefix')
+Future myTaskThatLogsBaz() => task((drun) => drun.log('i did some work'));
 
 /// An example of running the same task many times but only having it truly
 /// execute once. This is very handy for constructing complex build chains

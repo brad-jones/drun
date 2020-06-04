@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:recase/recase.dart';
 import 'package:stack_trace/stack_trace.dart';
 
+import 'package:drun/src/annotations.dart';
 import 'package:drun/src/build_arg_parser.dart';
 import 'package:drun/src/dsl/drun.dart';
 import 'package:drun/src/dsl/logging.dart';
@@ -126,7 +127,16 @@ Future<void> drun(
 /// });
 /// ```
 Future<T> task<T>(FutureOr<T> Function(Drun) computation) async {
-  var d = Drun(Trace.current().frames[1].member.paramCase);
+  String prefix;
+  var frame = Trace.current().frames[1];
+  var rTask = reflectTask(frame);
+  if (LogPrefix.hasMetadata(rTask.value)) {
+    prefix = LogPrefix.fromMetadata(rTask.value).value;
+  } else {
+    prefix = rTask.key;
+  }
+
+  var d = Drun(prefix);
   var r = await computation(d);
   d.writeBufferedLogs();
   return r;
