@@ -138,12 +138,19 @@ Future myTaskThatUsesTaskHelper() => task((drun) {
 ///
 /// ```dart
 /// Future myTaskThatDependsOnAnother() => task((drun) async {
-///   await drun.deps([_aPrivateTask()]);
+///   var tasks = [_aPrivateTask()];
+///   if (false) {
+///     tasks.add(_aPrivateTask());
+///   }
+///   await drun.deps(tasks);
 ///   drun.log('doing more work');
 /// });
 /// ```
-Future myTaskThatDependsOnAnother() => task((drun) =>
-    drun.deps([_aPrivateTask()]).then((_) => drun.log('doing more work')));
+Future myTaskThatDependsOnAnother() => task((drun) => drun.deps([
+      _aPrivateTask(),
+      // conditional tasks can easily be added by using the ternary operator
+      false ? _aPrivateTask() : null,
+    ]).then((_) => drun.log('doing more work')));
 
 /// Oh and if you do use the [task] wrapper, you can define private tasks like
 /// this one. These are not callable via the CLI nor will they show up in any

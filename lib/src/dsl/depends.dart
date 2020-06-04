@@ -18,5 +18,5 @@ mixin Depends {
   ///
   /// _NOTE: This is simply an alias for [Future.wait]_
   Future<List<T>> deps<T>(Iterable<Future<T>> tasks) =>
-      Future.wait(tasks, eagerError: true);
+      Future.wait(tasks.where((_) => _ != null), eagerError: true);
 }
