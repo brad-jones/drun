@@ -74,12 +74,20 @@ Map<String, MethodMirror> reflectTasks(
   if (_tasks == null) {
     _tasks = <String, MethodMirror>{};
 
+    var sortedDeps = deps.entries.toList();
+    sortedDeps.sort((a, b) {
+      if (a.key.split(':').length > b.key.split(':').length) {
+        return 1;
+      }
+      return 0;
+    });
+
     for (var e in libs.entries) {
       if (e.key.path.endsWith('Makefile.dart')) {
         for (var task in e.value.declarations.values
             .whereType<MethodMirror>()
             .where((v) => v.simpleName != Symbol('main') && !v.isPrivate)) {
-          var prefix = deps.entries
+          var prefix = sortedDeps
               .firstWhere(
                   (_) =>
                       _.value.location.sourceUri ==
