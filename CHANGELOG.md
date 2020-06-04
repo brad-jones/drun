@@ -1,3 +1,10 @@
+## [6.2.1](https://github.com/brad-jones/drun/compare/v6.2.0...v6.2.1) (2020-06-04)
+
+
+### Bug Fixes
+
+* **task:** private tasks work again ([323b08d](https://github.com/brad-jones/drun/commit/323b08d41b826485129f37d30c8317cae5f11202))
+
 # [6.2.0](https://github.com/brad-jones/drun/compare/v6.1.3...v6.2.0) (2020-06-04)
 
 
