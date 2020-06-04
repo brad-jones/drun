@@ -1,3 +1,16 @@
+# [6.2.0](https://github.com/brad-jones/drun/compare/v6.1.3...v6.2.0) (2020-06-04)
+
+
+### Bug Fixes
+
+* **lint:** cleaned up some linter warnings ([d1bb8ff](https://github.com/brad-jones/drun/commit/d1bb8ff455fbdf850490002621f91bbd2ff632b1))
+* **subtasks:** are now selected based on prefix length ([bc9e5eb](https://github.com/brad-jones/drun/commit/bc9e5eb3ca1b7becba7920a9e40d6e6a7bc173dd))
+
+
+### Features
+
+* **logprefix:** new annotation to improve how log prefixes can be set ([1d99336](https://github.com/brad-jones/drun/commit/1d99336818f85252bf5441a72099976bf3c784eb))
+
 ## [6.1.3](https://github.com/brad-jones/drun/compare/v6.1.2...v6.1.3) (2020-06-04)
 
 
