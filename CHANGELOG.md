@@ -1,3 +1,10 @@
+## [6.1.3](https://github.com/brad-jones/drun/compare/v6.1.2...v6.1.3) (2020-06-04)
+
+
+### Bug Fixes
+
+* **deps:** filter out null tasks, useful for creating conditional deps ([d264b3c](https://github.com/brad-jones/drun/commit/d264b3cc290cfc040c7c980a96edde5874efed04))
+
 ## [6.1.2](https://github.com/brad-jones/drun/compare/v6.1.1...v6.1.2) (2020-06-03)
 
 
