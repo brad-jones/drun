@@ -1,3 +1,10 @@
+# [6.3.0](https://github.com/brad-jones/drun/compare/v6.2.2...v6.3.0) (2020-06-04)
+
+
+### Features
+
+* **nologcolor:** colors can cause issues so allow them to be disabled ([4ace98a](https://github.com/brad-jones/drun/commit/4ace98a7b3525de92d299401f667549c11252ac6))
+
 ## [6.2.2](https://github.com/brad-jones/drun/compare/v6.2.1...v6.2.2) (2020-06-04)
 
 
