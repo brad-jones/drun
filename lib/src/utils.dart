@@ -67,12 +67,13 @@ Map<String, LibraryMirror> reflectDeps(LibraryMirror makeFile, String prefix) {
 }
 
 Map<String, MethodMirror> _tasks;
+Map<String, MethodMirror> _allTasks;
 Map<String, MethodMirror> reflectTasks(
   Map<Uri, LibraryMirror> libs,
   Map<String, LibraryMirror> deps,
 ) {
   if (_tasks == null) {
-    _tasks = <String, MethodMirror>{};
+    _allTasks = <String, MethodMirror>{};
 
     var sortedDeps = deps.entries.toList();
     sortedDeps.sort((a, b) {
@@ -86,7 +87,7 @@ Map<String, MethodMirror> reflectTasks(
       if (e.key.path.endsWith('Makefile.dart')) {
         for (var task in e.value.declarations.values
             .whereType<MethodMirror>()
-            .where((v) => v.simpleName != Symbol('main') && !v.isPrivate)) {
+            .where((v) => v.simpleName != Symbol('main'))) {
           var prefix = sortedDeps
               .firstWhere(
                   (_) =>
@@ -95,10 +96,16 @@ Map<String, MethodMirror> reflectTasks(
                   orElse: () => null)
               .key;
 
-          _tasks['${prefix}${prefix == '' ? '' : ':'}${MirrorSystem.getName(task.simpleName).paramCase}'] =
+          _allTasks[
+                  '${prefix}${prefix == '' ? '' : ':'}${MirrorSystem.getName(task.simpleName).paramCase}'] =
               task;
         }
       }
+    }
+
+    _tasks = <String, MethodMirror>{};
+    for (var e in _allTasks.entries.where((e) => !e.value.isPrivate)) {
+      _tasks[e.key] = e.value;
     }
   }
 
@@ -106,7 +113,7 @@ Map<String, MethodMirror> reflectTasks(
 }
 
 MapEntry<String, MethodMirror> reflectTask(Frame frame) {
-  for (var e in _tasks.entries) {
+  for (var e in _allTasks.entries) {
     if (MirrorSystem.getName(e.value.simpleName) == frame.member) {
       if ((e.value.owner as LibraryMirror).uri == frame.uri) {
         return e;
