@@ -54,6 +54,11 @@ Future<void> executor(
     Logging.buffered = true;
   }
 
+  if (parsedArgv.wasParsed('no-log-colors') ||
+      Platform.environment.containsKey('DRUN_NO_LOG_COLORS')) {
+    Logging.colors = false;
+  }
+
   if (Platform.environment.containsKey('DRUN_LOG_BUFFERED_TPL')) {
     Logging.bufferedTpl = Platform.environment['DRUN_LOG_BUFFERED_TPL'];
   }

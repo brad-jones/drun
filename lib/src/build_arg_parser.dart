@@ -16,6 +16,7 @@ ArgParser buildArgParser(
   parser.addFlag('version', abbr: 'v');
   parser.addFlag('show-subtasks');
   parser.addFlag('log-buffered');
+  parser.addFlag('no-log-colors');
 
   for (var e in options.entries) {
     var abbrValue =

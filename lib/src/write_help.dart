@@ -255,5 +255,17 @@ Future<void> writeHelp(
   stdout.writeln('  If set then logs will be buffered and output in groups.');
   stdout.writeln();
 
+  Console.setBold(true);
+  Console.setUnderline(true);
+  Console.setTextColor(Color.GRAY.id);
+  var logColorsFlag = '  --no-log-colors';
+  stdout.write(logColorsFlag);
+  stdout.write(
+      '<env:DRUN_NO_LOG_COLORS> [bool]'.padLeft(80 - logColorsFlag.length));
+  stdout.writeln();
+  Console.resetAll();
+  stdout.writeln('  If set then logs will not contain terminal colors.');
+  stdout.writeln();
+
   await stdout.flush();
 }

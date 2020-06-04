@@ -47,6 +47,7 @@ export 'package:drun/src/global_options.dart';
 Future<void> drun(
   List<String> argv, {
   String dotEnvFilePath = '.env',
+  bool logColors = true,
   bool showSubtasks = false,
   bool logBuffered = false,
   String logBufferedTpl,
@@ -72,6 +73,9 @@ Future<void> drun(
     }
     if (logPrefixSeperator != null) {
       Logging.prefixSeperator = logPrefixSeperator;
+    }
+    if (logColors != null) {
+      Logging.colors = logColors;
     }
 
     // Use reflection to discover the structure of the task runner

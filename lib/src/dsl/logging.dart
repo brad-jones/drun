@@ -5,13 +5,32 @@ import 'package:mustache_template/mustache.dart';
 
 mixin Logging {
   // ---------------------------------------------------------------------------
+  bool _logColors;
+
+  /// Gets the log color mode.
+  ///
+  /// If this instance has no value set,
+  /// then the global value of [colors] is returned.
+  bool get logColors => _logColors ?? colors;
+
+  /// Sets the log color mode.
+  ///
+  /// If `true` then [logPrefix] [_colorize] every prefix.
+  set logColors(bool v) => _logColors = v;
+
+  /// A global default value that can be set via the main [drun] method,
+  /// the cli flag `--no-log-colors` or an environment variable
+  /// `DRUN_NO_LOG_COLORS`.
+  static bool colors = true;
+
+  // ---------------------------------------------------------------------------
   String _logPrefix;
 
   /// Gets the log prefix to use for any messages output with [log].
   String get logPrefix => _logPrefix;
 
   /// Sets the log prefix to use for any messages output with [log].
-  set logPrefix(String v) => _logPrefix = _colorize(v);
+  set logPrefix(String v) => _logPrefix = logColors ? _colorize(v) : v;
 
   // ---------------------------------------------------------------------------
   bool _logBuffered;
