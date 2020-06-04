@@ -5,7 +5,6 @@ import 'dart:mirrors';
 import 'package:dotenv/dotenv.dart' as dotenv;
 import 'package:io/ansi.dart';
 import 'package:path/path.dart' as p;
-import 'package:recase/recase.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 import 'package:drun/src/annotations.dart';
@@ -68,9 +67,12 @@ Future<void> drun(
     // Set custom global logging options
     // This allows someone to do something like: `drun(argv, logBuffered: true)`
     Logging.buffered = logBuffered;
-    if (logBufferedTpl != null) Logging.bufferedTpl = logBufferedTpl;
-    if (logPrefixSeperator != null)
+    if (logBufferedTpl != null) {
+      Logging.bufferedTpl = logBufferedTpl;
+    }
+    if (logPrefixSeperator != null) {
       Logging.prefixSeperator = logPrefixSeperator;
+    }
 
     // Use reflection to discover the structure of the task runner
     var ms = currentMirrorSystem();
