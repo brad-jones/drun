@@ -1,3 +1,10 @@
+## [6.2.2](https://github.com/brad-jones/drun/compare/v6.2.1...v6.2.2) (2020-06-04)
+
+
+### Bug Fixes
+
+* **logging:** the buffered tpl now allows full control over the output ([1008545](https://github.com/brad-jones/drun/commit/10085450c0aa65be11dbb57667bd4869bb1087af))
+
 ## [6.2.1](https://github.com/brad-jones/drun/compare/v6.2.0...v6.2.1) (2020-06-04)
 
 
