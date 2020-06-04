@@ -53,7 +53,7 @@ mixin Logging {
   /// A global default value that can be set via the main [drun] method,
   /// or an environment variable `DRUN_LOG_BUFFERED_TPL`.
   static String bufferedTpl =
-      '>>> {{prefix}}\n--------------------------------------------------------------------------------\n';
+      '>>> {{prefix}}\n--------------------------------------------------------------------------------\n{{logs}}\n\n';
 
   // ---------------------------------------------------------------------------
   String _logPrefixSeperator;
@@ -104,12 +104,13 @@ mixin Logging {
     if (_logBuffer.isNotEmpty) {
       if (logBufferedTpl?.isNotEmpty ?? false) {
         stdout.write(
-          Template(logBufferedTpl).renderString({'prefix': logPrefix}),
+          Template(logBufferedTpl).renderString({
+            'prefix': logPrefix,
+            'logs': _logBuffer.join('\n'),
+          }),
         );
-      }
-      stdout.writeAll(_logBuffer, '\n');
-      if (logBufferedTpl?.isNotEmpty ?? false) {
-        stdout.write('\n\n');
+      } else {
+        stdout.writeAll(_logBuffer, '\n');
       }
     }
   }
