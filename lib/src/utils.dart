@@ -7,8 +7,6 @@ import 'package:crypto/crypto.dart';
 import 'package:recase/recase.dart';
 import 'package:stack_trace/stack_trace.dart';
 
-import 'package:drun/src/global_options.dart';
-
 String fixGlobForWindows(String glob) {
   return glob.replaceAll('\\', '/');
 }
@@ -126,24 +124,19 @@ MapEntry<String, MethodMirror> reflectTask(Frame frame) {
 Map<String, MethodMirror> reflectOptions(Map<Uri, LibraryMirror> libs) {
   var options = <String, MethodMirror>{};
 
-  ClassMirror optionsClass;
   for (var lib in libs.values) {
-    var result = lib.declarations.values
-        .whereType<ClassMirror>()
+    var methods = lib.declarations.values
+        .whereType<MethodMirror>()
+        .where((v) => v.isExtensionMember)
         .where((v) => !v.isPrivate)
-        .where((v) => v.isSubclassOf(reflectClass(GlobalOptions)));
+        .where((v) =>
+            MirrorSystem.getName(v.qualifiedName).startsWith('.Options'));
 
-    if (result.length == 1) {
-      optionsClass = result.first;
-    } else if (result.length > 1) {
-      throw Exception('can only have a single options class');
-    }
-  }
-
-  if (optionsClass != null) {
-    for (var e in optionsClass.staticMembers.entries) {
-      if (e.value.source?.contains('GlobalOptions.value') ?? false) {
-        options[MirrorSystem.getName(e.key).paramCase] = e.value;
+    for (var method in methods) {
+      if (method.source?.contains('optionValue') ?? false) {
+        options[MirrorSystem.getName(method.simpleName)
+            .substring(8)
+            .paramCase] = method;
       }
     }
   }
