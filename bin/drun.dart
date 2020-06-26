@@ -1,12 +1,21 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:dexeca/dexeca.dart';
-import 'package:path/path.dart' as p;
+
+import 'package:analyzer/dart/analysis/features.dart';
+import 'package:analyzer/dart/analysis/utilities.dart' as analyzer;
+import 'package:analyzer/dart/ast/ast.dart';
+import 'package:archive/archive_io.dart';
 import 'package:archive/archive.dart';
 import 'package:console/console.dart';
-import 'package:dexecve/dexecve.dart';
+import 'package:dexeca/dexeca.dart';
 import 'package:dexeca/look_path.dart';
+import 'package:dexecve/dexecve.dart';
 import 'package:http/http.dart' as http;
-import 'package:archive/archive_io.dart';
+import 'package:json2yaml/json2yaml.dart';
+import 'package:path/path.dart' as p;
+import 'package:pubspec_yaml/pubspec_yaml.dart';
+import 'package:queries/collections.dart';
+import 'package:recase/recase.dart';
 
 const _DEFAULT_SCRIPT = 'Makefile.dart';
 const _VERSION = '0.0.0-semantically-released';
@@ -22,7 +31,7 @@ Options:
 
 > These options only work when no script is found, if a valid dart script is
 > found all additional arguments are passed to that script. Which is why you
-> might see different results based on the existence of valid script.
+> might see different results based on the existence of a valid script.
 
 Drun runs dart scripts, given a path to any dartlang script it will attempt
 execute that script using dart. In the event no script is given it defaults
@@ -34,10 +43,14 @@ Before executing any script drun will do the following additional actions:
     do not actually have dart installed so drun will install it for you if it
     can not find the dart binary.
 
-  - It will also execute `pub get` to ensure all dependencies are installed.
-    Drun will only do this if it detects a `pubspec.yaml` file in the same
-    directory as the script it is executing and the `.packages` file does
-    not exist.
+  - If a pubspec.yaml can not be found the script and any other imported scripts
+    will be parsed and a pubspec.yaml file will be generated for you based on
+    all imported packages. The latest stable version of each package will be used.
+
+  - Once a pubspec.yaml file exists itt will also execute `pub get` to ensure
+    all dependencies are installed. Drun will only do this if it detects a
+    `pubspec.yaml` file in the same directory as the script it is executing and
+    the `.packages` file does not exist.
 
 To get additional debugging information from drun you can set the environment
 variable `DRUN_DEBUG` to any non empty value. Then additonal logging and stack
@@ -105,6 +118,29 @@ void extractZipFileSync(File zip, Directory out) {
   progress.update(archive.length);
 }
 
+List<String> findImports(String filepath) {
+  var packages = <String>[];
+
+  var ast = analyzer.parseFile(
+    path: filepath,
+    featureSet: FeatureSet.fromEnableFlags([]),
+  );
+
+  for (var directive in ast.unit.directives) {
+    if (directive is ImportDirective) {
+      var import = directive.uri.stringValue;
+      if (import.startsWith('package:')) {
+        packages.add(import.replaceFirst('package:', '').split('/')[0]);
+      } else if (!import.startsWith('dart:')) {
+        import = p.canonicalize(p.join(p.dirname(filepath), import));
+        packages.addAll(findImports(import));
+      }
+    }
+  }
+
+  return Collection(packages).distinct().toList();
+}
+
 Future main(List<String> argv) async {
   // We shell out to both dart and pub so lets get their locations
   var dart = dartBin();
@@ -116,7 +152,7 @@ Future main(List<String> argv) async {
   if (dart == null || pub == null) {
     var dartDir = Directory(p.join(
       Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'],
-      '.dart1',
+      '.dart',
     ));
 
     if (!dartDir.existsSync()) {
@@ -169,7 +205,7 @@ Future main(List<String> argv) async {
   }
 
   // Check to see what files exist
-  var cwd = p.dirname(args[0]);
+  var cwd = p.canonicalize(p.dirname(args[0]));
   var results = await Future.wait([
     File(args[0]).exists(),
     File(p.join(cwd, '.packages')).exists(),
@@ -192,6 +228,36 @@ Future main(List<String> argv) async {
     stdout.writeln();
     stdout.write(_HELP_TXT);
     exit(1);
+  }
+
+  // If there is no pubspec file lets create one based on the packages imported
+  if (!results[2]) {
+    var packageRequests = <Future<http.Response>>[];
+    for (var package in findImports(args[0])) {
+      packageRequests.add(http.get(
+        'https://pub.dartlang.org/api/packages/${package}',
+        headers: {'Accept': 'application/vnd.pub.v2+json'},
+      ));
+    }
+
+    dynamic pubspec = {'name': p.basename(cwd).snakeCase, 'dependencies': {}};
+    await for (var response in Stream.fromFutures(packageRequests)) {
+      if (response.statusCode == 200) {
+        var payload = json.decode(response.body);
+        var package = payload['name'];
+        var version = payload['latest']['version'];
+        pubspec['dependencies'][package] = '^${version}';
+      } else {
+        throw Exception(
+          'request failed (${response.statusCode}): '
+          '${response.request.method} ${response.request.url}',
+        );
+      }
+    }
+
+    var yaml = json2yaml(pubspec).toPubspecYaml().toYamlString();
+    await File(p.join(cwd, 'pubspec.yaml')).writeAsString(yaml);
+    results[2] = true;
   }
 
   // If we can find a pubspec.yaml file alongside the script we are
