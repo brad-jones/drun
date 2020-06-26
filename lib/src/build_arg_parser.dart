@@ -44,6 +44,11 @@ ArgParser buildArgParser(
     for (var parameter in e.value.parameters) {
       var optName = MirrorSystem.getName(parameter.simpleName).paramCase;
 
+      if (optName == 'argv' &&
+          parameter.type.reflectedType.toString() == 'List<String>') {
+        continue;
+      }
+
       var abbrValue = Abbr.hasMetadata(parameter)
           ? Abbr.fromMetadata(parameter).value
           : null;

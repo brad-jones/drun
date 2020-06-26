@@ -68,8 +68,14 @@ Future<void> executor(
   }
 
   var taskParameterValues = task.parameters.map((p) {
+    dynamic v;
+
     var pName = MirrorSystem.getName(p.simpleName).paramCase;
-    var v = parsedArgv.command[pName];
+    if (pName == 'argv' && p.type.reflectedType.toString() == 'List<String>') {
+      v = parsedArgv.command.rest;
+    } else {
+      v = parsedArgv.command[pName];
+    }
 
     if (v != null) {
       return typeParser(p.type.reflectedType, v);

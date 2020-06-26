@@ -46,6 +46,10 @@ Future<List<DocBlock>> parseDocBlocks(
     var parameters = <String, String>{};
     for (var parameter in e.value.parameters) {
       var paramName = MirrorSystem.getName(parameter.simpleName);
+      if (paramName == 'argv' &&
+          parameter.type.reflectedType.toString() == 'List<String>') {
+        continue;
+      }
       parameters[paramName] = docBlock
           .skipWhile((_) => !_.startsWith('* [$paramName]'))
           .takeWhile(
