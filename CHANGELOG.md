@@ -1,3 +1,20 @@
+# [7.0.0](https://github.com/brad-jones/drun/compare/v6.3.0...v7.0.0) (2020-06-26)
+
+
+### Features
+
+* added move method to dsl ([5230e1a](https://github.com/brad-jones/drun/commit/5230e1a43b3aef80f4a7a7c2bb2b7f7d69748523))
+* global options have changed to extension getters ([f6c0da5](https://github.com/brad-jones/drun/commit/f6c0da52496a45d9ae0404dee8578e352781eb2e))
+* position arguments can be proxied through a task now ([d535162](https://github.com/brad-jones/drun/commit/d5351623a4e7c94fd043e9612c07c67df0eaf0e1))
+* the drun cli will now generate a missing pubspec.yaml ([b4c5985](https://github.com/brad-jones/drun/commit/b4c59850887a3a9d4c04b78b10a138e2002bff70))
+
+
+### BREAKING CHANGES
+
+* The static Options class is no more and
+global options are implemented as extension getters on the
+Drun class.
+
 # [6.3.0](https://github.com/brad-jones/drun/compare/v6.2.2...v6.3.0) (2020-06-04)
 
 
