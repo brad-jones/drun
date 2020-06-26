@@ -78,7 +78,7 @@ _Makefile.dart_
 
 ```dart
 import 'package:drun/drun.dart';
-Future main(argv) async => drun(argv);
+Future main(argv) => drun(argv);
 Future myTask() => task((drun) => drun.log('Hello World'));
 ```
 
