@@ -10,6 +10,7 @@ executables:
   drun:
 
 dependencies:
+  analyzer: ^0.39.10
   ansicolor: ^1.0.2
   archive: ^2.0.13
   args: ^1.5.3
@@ -23,8 +24,11 @@ dependencies:
   glob: ^1.2.0
   http: ^0.12.1
   io: ^0.3.3
+  json2yaml: ^1.0.1
   mustache_template: ^1.0.0+1
   path: ^1.7.0
+  pubspec_yaml: ^2.0.1
+  queries: ^0.1.14
   recase: ^3.0.0
   stack_trace: ^1.9.3
 
