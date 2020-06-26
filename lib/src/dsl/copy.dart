@@ -8,7 +8,7 @@ import 'package:drun/src/dsl/realpath.dart';
 import 'package:drun/src/utils.dart';
 
 mixin Copy on Realpath, Logging {
-  /// Copies [source] to [destination] regardless if a single file
+  /// Copies [src] to [dst] regardless if a single file
   /// or entire folders. [excludes] are matched using [Glob].
   ///
   /// Returns a list of file paths that were copied.
