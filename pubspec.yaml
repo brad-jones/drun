@@ -22,7 +22,7 @@ dependencies:
   dexecve: ^1.1.0
   dotenv: ^2.0.0
   glob: ^1.2.0
-  http: ^0.12.1
+  http: ">=0.12.1 <0.14.0"
   io: ^0.3.3
   json2yaml: ^1.0.1
   mustache_template: ^1.0.0+1
